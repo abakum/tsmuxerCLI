@@ -75,6 +75,8 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
  if "Resolution:" in me:
   me["Width:"], me["Height:"]=me["Resolution:"].split(":")[:2]
   me["Height:"]=me["Height:"].rstrip("ip.")
+ for whf in ("Width:", "Height:", "Frame rate:"):
+  if whf in me and whf not in mg: mg[whf]=me[whf]
  me["Chapters:"]=[]
  if "Marks:" in me:
   for ch in me["Marks:"]: me["Chapters:"]+=ch.split()
@@ -92,10 +94,19 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
   if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subTrack=%s'%me["subTrack:"][t]]
   if "Stream lang:" in me and me["Stream lang:"][t]: ll+=['lang=%s'%me["Stream lang:"][t]]
   if "s"==tl.lower().lstrip("#")[0]:
-   if "Frame rate:" in me: ll+=['fps=%s'%me["Frame rate:"]]
-  if "/u" in tl.lower():
-   if "Width:" in me: ll+=['video-width=%s'%me["Width:"]]
-   if "Height:" in me: ll+=['video-height=%s'%me["Height:"]]
+   for lgd in (me, mg):
+    if "Frame rate:" in lgd:
+     ll+=['fps='+lgd["Frame rate:"]]
+     break
+   if "/u" in tl.lower():
+    for lgd in (me, mg):
+     if "Width:" in lgd:
+      ll+=['video-width='+lgd["Width:"]]
+      break
+    for lgd in (me, mg):
+     if "Height:" in lgd:
+      ll+=['video-height='+lgd["Height:"]]
+      break
   mm+=[", ".join(ll)]
  if d: ps("mm:", mm)
  return mm
@@ -284,6 +295,7 @@ meta=[] #metadata dict
 extl=("iso", "ts", "m2ts", "mts")
 mo=0 #meta line copy
 fin=0 #current fi
+mg={} #default dict for whf
 for a in argv[1:]:                                                       #parse arg
  if fin not in odl: odl[fin]=[]                                                   
  if a[0] in opt: odl[fin]+=[a]
@@ -400,3 +412,4 @@ print("\n".join(meta), file=codecs.open(fm, "w", encoding=u8), end="") #write me
 print(fm+":")
 with codecs.open(fm, encoding=u8) as f: print(f.read())                #print meta
 if fo: tsMuxeR(fm, fo)                                                 #run tsMuxeR fm fo
+ 
