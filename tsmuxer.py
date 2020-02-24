@@ -20,7 +20,7 @@ def ac(eio):
  mingw="MINGW_PREFIX" in os.environ
  if mingw: pass #dirty fix misdetection of sys.stdout.encoding as cpXXXX in mingw@Mintty
  elif py3 or not eio.isatty() or eio.encoding.lstrip("cp")==acp: return
- setattr(sys, eio.name.strip("<>"), codecs.getwriter(u8 if mingw else 
+ setattr(sys, eio.name.strip("<>"), codecs.getwriter(u8 if mingw else
                                                      acp)(eio.detach() if py3 else
                                                           eio))
  ps(eio, "encoding='%s'"%eio.encoding, acp)
@@ -37,7 +37,7 @@ def tsMuxeR(*arg):
   p=subprocess.Popen(map(en, cmd), bufsize=0, universal_newlines=True, stdout=subprocess.PIPE)
   if 1:
    for line in iter(p.stdout.readline, ""): print(line, end="")
-  else: 
+  else:
    while p.poll() is None: print(p.stdout.read(1), end="")
   return
  else:
@@ -68,9 +68,9 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
     if not s in me: me[s]=[]
     me[s]+=[l[len(s):].strip()]
  if not "Stream info:" in me: exit()
- for sl in me["Stream info:"]: 
+ for sl in me["Stream info:"]:
   for su in ("Profile:", "Resolution:", "Frame rate:", "Bitrate:", "Sample Rate:", "Channels:"):
-   if su in sl: 
+   if su in sl:
     if not su in me: me[su]=sl.partition(su+" ")[2].split()[0]
  if "Resolution:" in me:
   me["Width:"], me["Height:"]=me["Resolution:"].split(":")[:2]
@@ -81,7 +81,7 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
  if "Marks:" in me:
   for ch in me["Marks:"]: me["Chapters:"]+=ch.split()
  for x in lii[1:]:
-  if su in me: me[su]=me[su][0] 
+  if su in me: me[su]=me[su][0]
  ll="MUXOPT --no-pcr-on-video-pid --new-audio-pes --vbr --vbv-len=500".split()
  if "Chapters:" in me and len(me["Chapters:"])>1: ll+=["--custom-chapters=%s"%";".join(me["Chapters:"])]
  if "start-time:" in me: ll+=["--start-time=%s"%me["start-time:"][0]]
@@ -113,14 +113,14 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
 
 def ext(f):
  return de(os.path.splitext(f)[1]).lower().lstrip(".")
- 
+
 def rep(p, a="", t=0):
  #ps("rep",p,a,t)
  if t and t not in sdl[fin]: return #t is not selected track
  if a.endswith("="): #--demux=
   ms[t]-={sed(p, -1)}
  else: ms[t]|={sed(p, t)}
- 
+
 def usage():
  ps(argv)
  ps("fe:", fe, "fi:", fi, "fm:", fm, "fo:", fo)
@@ -198,11 +198,11 @@ ex:
  "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 3D1.mkv BD3D1" will be write to blu-ray directory BD3D1 from 3D1.mkv
  "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
              will be glued BD3D1 and BD3D2 to blu-ray directory BD3D
-''') 
+''')
  exit()
 
 def nf(f):
- if not os.path.isfile(f): 
+ if not os.path.isfile(f):
   ps("Not found:", f)
   usage()
 
@@ -211,7 +211,7 @@ def ps(*l):
 
 def comm(t):
  if t: ml[t][0]="#"+ml[t][0].lstrip("#")
- 
+
 def q(s):
  return '"%s"'%s if " " in s else s
 
@@ -221,7 +221,7 @@ def sed(s, t):
   if n in md[t]: md[t].pop(n)
  else: md[t][n]=v
  return n
- 
+
 if __name__!="__main__": exit()#---------------------------------------------------------------------------
 MO={
  "demux",
@@ -260,7 +260,7 @@ M=MO|MB|MC|MS|{
  "label",
  #"extra-iso-space",
 }
-VAS={ 
+VAS={
  "track",
  "lang",
 }
@@ -331,7 +331,7 @@ mo=0 #meta line copy
 fin=0 #current fi
 mg={} #default dict for whf
 for a in argv[1:]:                                                       #parse arg
- if fin not in odl: odl[fin]=[]                                                   
+ if fin not in odl: odl[fin]=[]
  if a[0] in opt: odl[fin]+=[a]
  elif os.path.isdir(a) or ext(a) in extl: fo=a
  elif "+" in a:
