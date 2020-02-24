@@ -11,39 +11,35 @@ fiList2 fiSel2 (-|fiOptList2) \
 ...
 fiListLast fiSelLast (-|fiOptListLast)
 
-where:
- - tsMuxeR - tsMuxeR executable. If omitted, then I will search it in the directory with tsmuxer.py
- - fm.meta - metadata file. If fiList is not omitted, then fm.meta will be created from "tsMuxeR fi.ext" and edited
-           otherwise it will be read and edited
- - fo.ext - output file with extension: 
- .iso - the options --blu-ray and --label="fo" will be added to muxOpt
- .ts .m2ts .mts - the options --demux --blu-ray --avchd will be removed from muxOpt
- - do - output directory for demux or blu-ray or avchd
-   if fo.ext|do is omitted, then "tsMuxeR fm.meta fo.ext|do" will not start
- - muxOpt - options for first line of fm.meta
- - fiList, ... fiListLast - a list of media files of the form: fi+[fi2[+...+fiLast]] that will be glued.
- - fiSel, ... fiSelLast - a list of track selectors of the form: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
- - selTr - is (V|A|S)|"foo bar"|foobar|\[0-9\](0-9) where fiOptList after:
-  - V - will only change the options applicable to video tracks
-  - A - will only change soundtrack options
-  - S - will only change the options applicable to the subtitle tracks
-  - "foo bar", foobar - will change the applicable options of only those tracks that have this substring
-  - \[0-9\](0-9) - will change the applicable options for the track with this number
- - ! - inverts the list of selected tracks
- - \+ - in the list: =selTr + =selTr2 will add to the list of tracks selected =selTr tracks that match the condition =selTr2
-     If omitted: =selTr =selTr2 then only tracks that satisfy both conditions will remain in the list of selected tracks
- - \- - comment out all the selected tracks, adding # to the beginning of the lines fm.meta, then select all the fiList tracks
- - = - will select all the tracks of the current fiList. Cancels the effect of all previously entered selTr
- - fiOptList - a list of options of the form: ,fiOpt [,fiOpt2 [...,fiOptLast]] will change the applicable options for previously selected tracks fm.meta
+ - tsMuxeR - tsMuxeR executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located
+ - fm.meta - metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext". Otherwise the given "fm.meta" will be used.
+ - fo.ext - output file with extension:
+          .iso (--blu-ray --label="fo" will be added to muxOpt)
+          .ts, .m2ts, .mts (--demux --blu-ray --avchd will be removed from muxOpt)
+ - do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
+ - muxOpt - options to be prepened to the "fm.meta"
+ - fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
+ - fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]"
+   - selTr - is one of the following options:
+           - V - selects the video tracks
+           - A - selects the audio tracks
+           - S - selects the subtitle tracks
+           - "foo bar", foobar - selects the tracks with the given substring
+           - \[0-9\](0-9) - selects the track by its number
+   - ! - inverts the track selection
+   - \+ - adds to the selection the tracks that match the next "selTr". If omitted, selects the tracks that match both the previous "selTr" and the next "selTr"
+ - \- - comments all the selected tracks in the "fm.meta" file, then selects all the tracks of current "fiList"
+ - = - selects all the tracks of the current "fiList". Cancels all the previous "selTr"
+ - fiOptList - changes the options of the selected tracks. Has the following syntax: ",fiOpt[ ,fiOpt2[... ,fiOptLast]]""
 ex:
- - "tsmuxer.py i.mkv+ my.ts =S -" will create i.mkv.meta and my.ts without subtitle tracks from i.mkv
- - "tsmuxer.py i.mkv+ my.meta" will create only my.meta from i.mkv
- - "tsmuxer.py my.meta . =_text =1 ! -" demultiplexes the first srt subtitle track to the current directory
- - "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" will create rus.iso with video tracks and tracks for those who understand the Russian language
- - "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" from BD3D will make 2D AVCHD
- - "tsmuxer.py --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,video-width=1920 ,video-height=1080 ,fps=50.0 ,lang=rus"
-             will cut 00042.MTS, discard its subtitles and add subtitles from 00042.srt
- - "tsmuxer.py --blu-ray 42.ts+43.ts BD" glued 42.ts and 43.ts to blu-ray directory BD
- - "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" writes blu-ray from 3D1.mkv to the BD3D1 directory
+ - "tsmuxer.py i.mkv+ my.ts =S -" creates "i.mkv.meta" from "i.mkv", excludes the subtitle tracks from it and produces "my.ts"
+ - "tsmuxer.py i.mkv+ my.meta" creates "my.meta" from "i.mkv"
+ - "tsmuxer.py my.meta . =_text =1 ! -" demultiplexes the first srt subtitle track into the current directory
+ - "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" muxes the BD file "rus.iso" from the video track and the tracks with "rus" in it
+ - "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" muxes 2D AVCHD from the given BD3D
+ - "tsmuxer.py --blu-ray --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,font-name=Impact ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
+             cuts 00042.MTS, strips all the subtitles from it, adds srt subtitle tracks from 00042.srt, and outputs "42.ts"
+ - "tsmuxer.py --blu-ray 42.ts+43.ts BD" glues 42.ts and 43.ts into the blu-ray directory "BD"
+ - "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" creates the blu-ray directory "BD3D1" from "3D1.mkv"
  - "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
-             combine BD3D1 and BD3D2 and write to BD3D
+             glues "BD3D1" and "BD3D2" into the blu-ray directory "BD3D"
