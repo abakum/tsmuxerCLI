@@ -6,24 +6,24 @@ Helper for tsMuxeR - not GUI but CLI
 
 # Usage
 tsmuxer.py [tsMuxeR[.exe]] [fm.meta] [fo.ext|do] [--muxOpt] \
-fiList fiSel (-|,fiOpt) \
-fiList2 fiSel2 (-|,fiOpt2) \
+fiList fiSel (-|fiOptList) \
+fiList2 fiSel2 (-|fiOptList2) \
 ...
-fiListLast fiSelLast (-|,fiOptLast)
+fiListLast fiSelLast (-|fiOptListLast)
 
 where:
  - tsMuxeR - tsMuxeR executable. If omitted, then I will search it in the directory with tsmuxer.py
  - fm.meta - metadata file. If fiList is not omitted, then fm.meta will be created from "tsMuxeR fi.ext" and edited
            otherwise it will be read and edited
- - fo.ext - output file with extension:
-   + .iso - the options --blu-ray and --label="fo" will be added to muxOpt
-   + .ts .m2ts .mts - the options --demux --blu-ray --avchd will be removed from muxOpt
+ - fo.ext - output file with extension: 
+ .iso - the options --blu-ray and --label="fo" will be added to muxOpt
+ .ts .m2ts .mts - the options --demux --blu-ray --avchd will be removed from muxOpt
  - do - output directory for demux or blu-ray or avchd
    if fo.ext|do is omitted, then "tsMuxeR fm.meta fo.ext|do" will not start
  - muxOpt - options for first line of fm.meta
  - fiList, ... fiListLast - a list of media files of the form: fi+[fi2[+...+fiLast]] that will be glued.
  - fiSel, ... fiSelLast - a list of track selectors of the form: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
- - selTr - is (V|A|S)|"foo bar"|foobar|[0-9](0-9) where fiOptList after:
+ - selTr - is (V|A|S)|"foo bar"|foobar|\[0-9\](0-9) where fiOptList after:
   - V - will only change the options applicable to video tracks
   - A - will only change soundtrack options
   - S - will only change the options applicable to the subtitle tracks
