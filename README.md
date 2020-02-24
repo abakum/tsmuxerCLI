@@ -14,8 +14,9 @@ fiListLast fiSelLast (-|fiOptListLast)
  - tsMuxeR - tsMuxeR executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located
  - fm.meta - metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext". Otherwise the given "fm.meta" will be used.
  - fo.ext - output file with extension:
-          .iso (--blu-ray --label="fo" will be added to muxOpt)
-          .ts, .m2ts, .mts (--demux --blu-ray --avchd will be removed from muxOpt)
+   - .iso - --blu-ray --label="fo" will be added to muxOpt
+   - .ts, .m2ts, .mts - --demux --blu-ray --avchd will be removed from muxOpt
+
  - do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
  - muxOpt - options to be prepened to the "fm.meta"
  - fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
