@@ -125,11 +125,46 @@ def usage():
  ps(argv)
  ps("fe:", fe, "fi:", fi, "fm:", fm, "fo:", fo)
  print(r'''%s [tsMuxeR%s] [fm.meta] [fo.ext|do] [--muxOpt] \
-fiList fiSel (-|,fiOpt) \
-fiList2 fiSel2 (-|,fiOpt2) \
+fiList fiSel (-|fiOptList) \
+fiList2 fiSel2 (-|fiOptList2) \
 ...
-fiListLast fiSelLast (-|,fiOptLast)
-where:
+fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
+ if locale.getlocale()[0] in ("Russian_Russia", "ru_RU"): print(r'''где:
+ tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге с tsmuxer.py
+ fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан из "tsMuxeR fi.ext" и отредактирован
+           в противном случае будет прочитан и отредактирован
+ fo.ext - выходной файл с расширением: .iso (в muxOpt будет добавлен --blu-ray и --label="fo") .ts .m2ts .mts (из muxOpt будут удалены --demux --blu-ray ---avchd)
+ do - выходной каталог для demux или blu-ray или avchd
+      если fo.ext|do опущен, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
+ muxOpt - опции для первой строки fm.meta
+ fiList, ... fiListLast - список медиафайлов, вида fi+[fi2[+ ...+fiLast]] которые будут склеены.
+ fiSel, ... fiSelLast - список селекторов дорожек, вида [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
+ selTr - это (V|A|S)|"foo bar"|foobar|[0-9](0-9), где fiOptList после:
+  V - изменит только применимые к видео дорожкам опции
+  A - изменит только применимые к звуковым дорожкам опции
+  S - изменит только применимые к дорожкам субтитров опции
+  "foo bar", foobar - изменит применимые опции только тех дорожек, в которых есть эта подстрока
+  [0-9](0-9) - изменит применимые опции к дорожке с этим номером
+ ! - инвертирует список выбранных дорожек
+ + - приведет к добавлению в список выбранных дорожек, дорожек соответствующих условиям следующего selTr
+     Если опущен то к списку выбранных дорожек добавятся дорожки, удовлетворяющие как предыдущему условию, так и следующему.
+ - - закомментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выберет все дорожки
+ = - выберет все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr
+ fiOptList - список опций вида ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек fm.meta
+например:
+ "tsmuxer.py i.mkv+ my.ts =S -" создаст i.mkv.meta и my.ts без дорожек субтитров из i.mkv
+ "tsmuxer.py i.mkv+ my.meta" создаст только my.meta из i.mkv
+ "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку srt субтитров в текущий каталог
+ "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" создаст BD с видео дорожками и дорожками для русскоязычных
+ "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" из BD3D сделает 2D AVCHD
+ "tsmuxer.py --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
+             разрежет 00042.MTS, отбросит его субтитры и добавит субтитры из 00042.srt
+ "tsmuxer.py 42.ts+43.ts BD" склеит 42.ts и 43.ts в каталог блюрэй BD
+ "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 3D1.mkv BD3D1" запишет каталог блюрэй BD3D1 из 3D1.mkv
+ "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
+             склеит BD3D1 и BD3D2 в каталог блюрэй BD3D
+''')
+ else: print(r'''where:
  tsMuxeR - tsMuxeR executable. If omitted then it will be search in directory with tsmuxer.py
  fm.meta - metadata file. If fiList not omitted then fm.meta will be created by "tsMuxeR fi.ext" and edit
            otherwise will be read and edit
@@ -163,8 +198,7 @@ ex:
  "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 3D1.mkv BD3D1" will be write to blu-ray directory BD3D1 from 3D1.mkv
  "tsmuxer.py --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
              will be glued BD3D1 and BD3D2 to blu-ray directory BD3D
- 
- '''%(argv[0], exe)) #print help 
+''') 
  exit()
 
 def nf(f):
@@ -412,4 +446,3 @@ print("\n".join(meta), file=codecs.open(fm, "w", encoding=u8), end="") #write me
 print(fm+":")
 with codecs.open(fm, encoding=u8) as f: print(f.read())                #print meta
 if fo: tsMuxeR(fm, fo)                                                 #run tsMuxeR fm fo
- 
