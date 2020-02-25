@@ -25,7 +25,7 @@ def ac(eio):
                                                           eio))
  ps(eio, "encoding='%s'"%eio.encoding, acp)
 
-import subprocess, inspect
+import subprocess, inspect, json
 from datetime import datetime, timedelta
 if sys.version_info < (3, 6): from collections import OrderedDict
 else: OrderedDict = dict
@@ -139,7 +139,7 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
  if locale.getlocale()[0] in ("Russian_Russia", "ru_RU"): print(r'''где:
  tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py
  fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext" и отредактирован
-           в противном случае будет прочитан из "fm.meta" и отредактирован
+           в противном случае будет прочитан из fm.meta и отредактирован
  fo.ext - выходной файл с расширениями:
   .iso - в muxOpt будут добавлены опции --blu-ray и --label="fo"
   .ts .m2ts .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
@@ -312,7 +312,7 @@ od["S"]=VAS|{
  "video-width",
  "video-height",
 }
-od["s"]=od["S"]|{
+od["srt"]={
  "font-name",
  "font-color",
  "font-size",
@@ -326,6 +326,8 @@ od["s"]=od["S"]|{
  "fadeout-time",
  "line-spacing",
 }
+od["s"]=od["S"]|od["srt"]
+
 ac(sys.stdout)
 subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
 argv=[de(x) for x in sys.argv]
@@ -333,7 +335,9 @@ print("_`".join(argv))
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
 exe=".exe" if os.name=="nt" else ""
 opt="-+=,!"
-fe=de(os.path.splitext(os.path.abspath(argv[0]))[0])+exe                #tsMuxeR
+fe=de(os.path.splitext(os.path.abspath(argv[0]))[0])
+fj=fe+".json"
+fe+=exe #tsMuxeR
 fi="" #input files
 fm="" #meta file
 fo="" #output file or dir
@@ -451,6 +455,18 @@ if ext(fo) in extl:
  if ext(fo)==extl[0]:
   rep("blu-ray")
   if "label" not in ms[0]: rep('label="%s"'%os.path.splitext(os.path.split(fo)[1])[0])
+if os.path.isfile(fj): load=json.load(open(fj))
+else: load={}
+dump=load.copy()
+for t in mt["s"]:                       # from opt to file
+ for k in od["srt"]:
+  if k in md[t] and md[t][k]: dump[k]=md[t][k]
+if dump!=load: json.dump(dump, fp=open(fj, "w"), sort_keys=True, indent=1)
+for k in load:                          # from file to opt
+ for t in mt["s"]:
+  if k in md[t] and md[t][k]: continue
+  md[t][k]=load[k]
+  ms[t]|={k}
 for t, tl in enumerate(ml): #serializ meta
  ll=[]
  for p in md[t]:
