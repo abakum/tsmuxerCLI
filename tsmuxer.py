@@ -26,6 +26,7 @@ def ac(eio):
  ps(eio, "encoding='%s'"%eio.encoding, acp)
 
 import subprocess, inspect
+from datetime import datetime, timedelta
 if sys.version_info < (3, 6): from collections import OrderedDict
 else: OrderedDict = dict
 shell="SHELL" in os.environ
@@ -40,75 +41,81 @@ def tsMuxeR(*arg):
   else:
    while p.poll() is None: print(p.stdout.read(1), end="")
   return
- else:
-  fl=arg[0].split("+")
-  for f in fl: nf(f)
-  qfi='"%s"'%'"+"'.join(fl)
-  cmd=(fe,)+(fl[0],)
-  ps(" ".join(map(q, cmd)))
-  try:
-   r=subprocess.check_output(map(en, cmd), stderr=subprocess.STDOUT).decode(acp)
-  except subprocess.CalledProcessError as e:
-   ps(cmd)
-   ps("return code:", e.returncode)
-   ps("return text:", e.output)
-   exit()
-  print(r)
  if 0: return r'''MUXOPT --no-pcr-on-video-pid --vbr --vbv-len=500
 V_MPEG4/ISO/AVC, 00045.MTS, track=4113
 A_AC3, 00045.MTS, track=4352
 S_HDMV/PGS, 00045.MTS, fps=50, track=4608
 S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-size=65, font-color=0xffffffff, bottom-offset=24, font-border=5, text-align=center, video-width=1920, video-height=1080, fps=50, track=4, lang=rus'''.splitlines()
- me={}
- li=("Track ID:", "Stream type:", "Stream ID:", "Stream info:", "Stream lang:", "subTrack:")
- lii=("Marks:", "Duration:", "Stream delay:", "start-time:")
- for l in r.splitlines():
-  for s in li+lii:
-   if l.startswith(s):
-    if not s in me: me[s]=[]
-    me[s]+=[l[len(s):].strip()]
- if not "Stream info:" in me: exit()
- for sl in me["Stream info:"]:
-  for su in ("Profile:", "Resolution:", "Frame rate:", "Bitrate:", "Sample Rate:", "Channels:"):
-   if su in sl:
-    if not su in me: me[su]=sl.partition(su+" ")[2].split()[0]
- if "Resolution:" in me:
-  me["Width:"], me["Height:"]=me["Resolution:"].split(":")[:2]
-  me["Height:"]=me["Height:"].rstrip("ip.")
- for whf in ("Width:", "Height:", "Frame rate:"):
-  if whf in me and whf not in mg: mg[whf]=me[whf]
- me["Chapters:"]=[]
- if "Marks:" in me:
-  for ch in me["Marks:"]: me["Chapters:"]+=ch.split()
- for x in lii[1:]:
-  if su in me: me[su]=me[su][0]
- ll="MUXOPT --no-pcr-on-video-pid --new-audio-pes --vbr --vbv-len=500".split()
- if "Chapters:" in me and len(me["Chapters:"])>1: ll+=["--custom-chapters=%s"%";".join(me["Chapters:"])]
- if "start-time:" in me: ll+=["--start-time=%s"%me["start-time:"][0]]
- if d: ps("me:", me)
- mm=[" ".join(ll)]
- for t, tl in enumerate(me["Stream ID:"]):
-  ll=[tl]
-  ll+=[qfi]
-  if "Track ID:" in me: ll+=['track=%s'%me["Track ID:"][t]]
-  if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subTrack=%s'%me["subTrack:"][t]]
-  if "Stream lang:" in me and me["Stream lang:"][t]: ll+=['lang=%s'%me["Stream lang:"][t]]
-  if "s"==tl.lower().lstrip("#")[0]:
-   for lgd in (me, mg):
-    if "Frame rate:" in lgd:
-     ll+=['fps='+lgd["Frame rate:"]]
-     break
-   if "/u" in tl.lower():
+ fl=arg[0].split("+")
+ dur=0.0
+ global cha
+ for i, f in enumerate(fl):
+  nf(f)
+  cmd=(fe,)+(f,)
+  ps(" ".join(map(q, cmd)))
+  try:
+   r=subprocess.check_output(map(en, cmd), stderr=subprocess.STDOUT).decode(acp)
+  except subprocess.CalledProcessError as e:
+   ps("return code:", e.returncode)
+   ps("return text:", e.output)
+   exit()
+  print(r)
+  me={}
+  li=("Track ID:", "Stream type:", "Stream ID:", "Stream info:", "Stream lang:", "subTrack:")
+  lii=("Marks:", "Duration:", "Stream delay:", "start-time:")
+  for l in r.splitlines():
+   for s in li+lii:
+    if l.startswith(s):
+     if not s in me: me[s]=[]
+     me[s]+=[l[len(s):].strip()]
+  if not "Stream info:" in me:
+   ps('Not found tracks in "%s"'%f)
+   exit()
+  me["Chapters:"]=[]
+  if "Marks:" in me:
+   for ch in me["Marks:"]: me["Chapters:"]+=ch.split()
+   cha+=[dur+t2f(x) for x in me["Chapters:"]]
+  if "Duration:" in me: dur+=t2f(me["Duration:"][0])
+  if i: continue
+  for sl in me["Stream info:"]:
+   for su in ("Profile:", "Resolution:", "Frame rate:", "Bitrate:", "Sample Rate:", "Channels:"):
+    if su in sl:
+     if not su in me: me[su]=sl.partition(su+" ")[2].split()[0]
+  if "Resolution:" in me:
+   me["Width:"], me["Height:"]=me["Resolution:"].split(":")[:2]
+   me["Height:"]=me["Height:"].rstrip("ip.")
+  for whf in ("Width:", "Height:", "Frame rate:"):
+   if whf in me and whf not in mg: mg[whf]=me[whf]
+  for x in lii[1:]:
+   if su in me: me[su]=me[su][0]
+  ll="MUXOPT --no-pcr-on-video-pid --new-audio-pes --vbr --vbv-len=500".split()
+  #if "Chapters:" in me and len(me["Chapters:"])>1: ll+=["--custom-chapters=%s"%";".join(me["Chapters:"])]
+  if "start-time:" in me: ll+=["--start-time=%s"%me["start-time:"][0]]
+  if d: ps("me:", me)
+  mm=[" ".join(ll)]
+  qfi='"%s"'%'"+"'.join(fl)
+  for t, tl in enumerate(me["Stream ID:"]):
+   ll=[tl]
+   ll+=[qfi]
+   if "Track ID:" in me: ll+=['track=%s'%me["Track ID:"][t]]
+   if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subTrack=%s'%me["subTrack:"][t]]
+   if "Stream lang:" in me and me["Stream lang:"][t]: ll+=['lang=%s'%me["Stream lang:"][t]]
+   if "s"==tl.lower().lstrip("#")[0]:
     for lgd in (me, mg):
-     if "Width:" in lgd:
-      ll+=['video-width='+lgd["Width:"]]
+     if "Frame rate:" in lgd:
+      ll+=['fps='+lgd["Frame rate:"]]
       break
-    for lgd in (me, mg):
-     if "Height:" in lgd:
-      ll+=['video-height='+lgd["Height:"]]
-      break
-  mm+=[", ".join(ll)]
- if d: ps("mm:", mm)
+    if "/u" in tl.lower():
+     for lgd in (me, mg):
+      if "Width:" in lgd:
+       ll+=['video-width='+lgd["Width:"]]
+       break
+     for lgd in (me, mg):
+      if "Height:" in lgd:
+       ll+=['video-height='+lgd["Height:"]]
+       break
+   mm+=[", ".join(ll)]
+  if d: ps("mm:", mm)
  return mm
 
 def ext(f):
@@ -130,31 +137,31 @@ fiList2 fiSel2 (-|fiOptList2) \
 ...
 fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
  if locale.getlocale()[0] in ("Russian_Russia", "ru_RU"): print(r'''где:
- tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге с tsmuxer.py
- fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан из "tsMuxeR fi.ext" и отредактирован
-           в противном случае будет прочитан и отредактирован
+ tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py
+ fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext" и отредактирован
+           в противном случае будет прочитан из "fm.meta" и отредактирован
  fo.ext - выходной файл с расширениями:
   .iso - в muxOpt будут добавлены опции --blu-ray и --label="fo"
   .ts .m2ts .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
- do - выходной каталог для demux или blu-ray или avchd
-      если fo.ext|do опущен, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
+ do - выходной каталог для demux, blu-ray или avchd
+      если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
  muxOpt - опции для первой строки fm.meta
- fiList, ... fiListLast - список медиафайлов вида: fi+[fi2[+ ...+fiLast]] которые будут склеены.
- fiSel, ... fiSelLast - список селекторов дорожек вида: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
- selTr - это (V|A|S)|"foo bar"|foobar|[0-9](0-9), где fiOptList после:
-  V - изменит только применимые к видео дорожкам опции
-  A - изменит только применимые к звуковым дорожкам опции
-  S - изменит только применимые к дорожкам субтитров опции
-  "foo bar", foobar - изменит применимые опции только тех дорожек, в которых есть эта подстрока
-  [0-9](0-9) - изменит применимые опции к дорожке с этим номером
- ! - инвертирует список выбранных дорожек
- + - в списке: =selTr + =selTr2 добавит в список дорожек выбранных =selTr дорожки которые соответствуют условию =selTr2
-     Если опущен: =selTr =selTr2 то в списке выбраннвх дорожек  останутся только дорожки, удовлетворяющие обоим условиям
- - - закомментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выберет все дорожки fiList
+ fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
+ fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
+  selTr - это одна из следующих опций:
+   V - выберет видео дорожки
+   A - выберет звуковые дорожки
+   S - выберет дорожки субтитров
+   "foo bar", foobar - выберет только те дорожки, в которых есть эта подстрока
+   [0-9](0-9) - выберет дорожку с этим номером
+  ! - инвертирует список выбранных дорожек
+  + - Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2
+      Если опущен: "=selTr =selTr2" то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям
+ - - закомментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выберет все дорожки текущего fiList
  = - выберет все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr
  fiOptList - список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек fm.meta
 например:
- "tsmuxer.py i.mkv+ my.ts =S -" создаст i.mkv.meta и my.ts без дорожек субтитров из i.mkv
+ "tsmuxer.py i.mkv+ my.ts =S -" создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров
  "tsmuxer.py i.mkv+ my.meta" создаст только my.meta из i.mkv
  "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку srt субтитров в текущий каталог
  "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" создаст rus.iso с видео дорожками и дорожками для русскоязычных
@@ -169,22 +176,23 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
  else: print(r'''where:
  tsMuxeR - tsMuxeR executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located
  fm.meta - metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext". Otherwise the given "fm.meta" will be used.
- fo.ext - output file with extension:
-          .iso (--blu-ray --label="fo" will be added to muxOpt)
-          .ts, .m2ts, .mts (--demux --blu-ray --avchd will be removed from muxOpt)
+ fo.ext - output file with extensions:
+  .iso - options --blu-ray --label="fo" will be added to muxOpt
+  .ts, .m2ts, .mts - options --demux --blu-ray --avchd will be removed from muxOpt
  do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
- muxOpt - options to be prepened to the "fm.meta"
+ muxOpt - options to be prepened to the first line of "fm.meta"
  fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
  fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]"
-   selTr - is one of the following options:
-           V - selects the video tracks
-           A - selects the audio tracks
-           S - selects the subtitle tracks
-           "foo bar", foobar - selects the tracks with the given substring
-           [0-9](0-9) - selects the track by its number
-   ! - inverts the track selection
-   + - adds to the selection the tracks that match the next "selTr". If omitted, selects the tracks that match both the previous "selTr" and the next "selTr"
- - - comments all the selected tracks in the "fm.meta" file, then selects all the tracks of current "fiList"
+  selTr - is one of the following options:
+   V - selects the video tracks
+   A - selects the audio tracks
+   S - selects the subtitle tracks
+   "foo bar", foobar - selects the tracks with the given substring
+   [0-9](0-9) - selects the track by its number
+  ! - inverts the track selection
+  + - if present: "=selTr + =selTr2" selects "selTr" then adds to the selection the tracks that match "selTr2".
+      If omitted: "=selTr =selTr2" selects the tracks that match both "selTr" and "selTr2"
+ - - comment all selected tracks by adding # to the beginning of the lines "fm.meta", then select all the tracks of the current "fiList" 
  = - selects all the tracks of the current "fiList". Cancels all the previous "selTr"
  fiOptList - changes the options of the selected tracks. Has the following syntax: ",fiOpt[ ,fiOpt2[... ,fiOptLast]]""
 ex:
@@ -204,7 +212,7 @@ ex:
 
 def nf(f):
  if not os.path.isfile(f):
-  ps("Not found:", f)
+  ps('Not found file "%s"'%f)
   usage()
 
 def ps(*l):
@@ -223,6 +231,13 @@ def sed(s, t):
  else: md[t][n]=v
  return n
 
+def t2f(s):
+ try: return sum([60**(2-i)*k for i, k in enumerate(map(float, (("0:0:"+s).split(':'))[-3:]))])
+ except: return 0.0
+ 
+def f2t(s):
+ return (datetime(1970, 1, 1)+timedelta(seconds=s)).strftime("%H:%M:%S.%f")[:12]
+ 
 if __name__!="__main__": exit()#---------------------------------------------------------------------------
 MO={
  "demux",
@@ -331,6 +346,7 @@ extl=("iso", "ts", "m2ts", "mts")
 mo=0 #meta line copy
 fin=0 #current fi
 mg={} #default dict for whf
+cha=[]
 for a in argv[1:]:                                                       #parse arg
  if fin not in odl: odl[fin]=[]
  if a[0] in opt: odl[fin]+=[a]
@@ -348,6 +364,7 @@ for a in argv[1:]:                                                       #parse 
   nf(a)
   fe=a
 if fi:
+ if len(cha)>1: meta[0]+=" --custom-chapters=%s"%";".join(map(f2t, sorted(set(cha))))
  if not fm: fm=fi.split("+")[0]+".meta"
 if not fi:
  nf(fm)
