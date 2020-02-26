@@ -163,16 +163,16 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
 например:
  "tsmuxer.py i.mkv+ my.ts =S -" создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров
  "tsmuxer.py i.mkv+ my.meta" создаст только my.meta из i.mkv
- "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку srt субтитров в текущий каталог
+ "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку SRT субтитров в текущий каталог
  "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" создаст rus.iso с видео дорожками и дорожками для русскоязычных
  "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" из BD3D сделает 2D AVCHD
  "tsmuxer.py --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
-             обрежет 00042.MTS, отбросит его субтитры и добавит субтитры из 00042.srt
- "tsmuxer.py --blu-ray 42.ts+43.ts BD" склеит 42.ts и 43.ts в каталог блюрэя BD
+             обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt, запишет указанные SRT опции в "{0}" и создаст 42.ts
+ "tsmuxer.py --blu-ray 42.ts+43.ts BD" склеит 42.ts и 43.ts в каталог блюрэя BD. Опущенные опции SRT будут прочитаны из "{0}"
  "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" запишет в каталог BD3D1 блюрэй из 3D1.mkv
  "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
              объединит BD3D1 и BD3D2 и запишет BD3D
-''')
+'''.format(fj))
  else: print(r'''where:
  tsMuxeR - tsMuxeR executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located
  fm.meta - metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext". Otherwise the given "fm.meta" will be used.
@@ -198,16 +198,16 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
 ex:
  "tsmuxer.py i.mkv+ my.ts =S -" creates "i.mkv.meta" from "i.mkv", excludes the subtitle tracks from it and produces "my.ts"
  "tsmuxer.py i.mkv+ my.meta" creates "my.meta" from "i.mkv"
- "tsmuxer.py my.meta . =_text =1 ! -" demultiplexes the first srt subtitle track into the current directory
+ "tsmuxer.py my.meta . =_text =1 ! -" demultiplexes the first SRT subtitle track into the current directory
  "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" muxes the BD file "rus.iso" from the video track and the tracks with "rus" in it
  "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" muxes 2D AVCHD from the given BD3D
  "tsmuxer.py --blu-ray --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,font-name=Impact ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
-             cuts 00042.MTS, strips all the subtitles from it, adds srt subtitle tracks from 00042.srt, and outputs "42.ts"
- "tsmuxer.py --blu-ray 42.ts+43.ts BD" glues 42.ts and 43.ts into the blu-ray directory "BD"
+             cuts 00042.MTS, strips all the subtitles from it, adds SRT subtitle tracks from 00042.srt, saves given the SRT options to "{0}", and outputs "42.ts"
+ "tsmuxer.py --blu-ray 42.ts+43.ts BD" glues 42.ts and 43.ts into the blu-ray directory "BD". Omitted SRT options will be read from "{0}"
  "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" creates the blu-ray directory "BD3D1" from "3D1.mkv"
  "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
              glues "BD3D1" and "BD3D2" into the blu-ray directory "BD3D"
-''')
+'''.format(fj))
  exit()
 
 def nf(f):
@@ -304,6 +304,7 @@ od["A"]=VAS|{
  "down-to-dts",
  "down-to-ac3",
  "secondary",
+ "default",
 }
 od["S"]=VAS|{
  "timeshift",
@@ -325,6 +326,7 @@ od["srt"]={
  "fadein-time",
  "fadeout-time",
  "line-spacing",
+ "default",
 }
 od["s"]=od["S"]|od["srt"]
 
@@ -367,12 +369,16 @@ for a in argv[1:]:                                                       #parse 
  elif ext(a)==exe.lstrip("."):
   nf(a)
   fe=a
+ else: fo=a
 if fi:
  if len(cha)>1: meta[0]+=" --custom-chapters=%s"%";".join(map(f2t, sorted(set(cha))))
  if not fm: fm=fi.split("+")[0]+".meta"
 if not fi:
  nf(fm)
  with codecs.open(fm, encoding=u8) as f: meta=f.read().splitlines() #read fm
+ adl[0]=set(range(1, len(meta)))
+ sdl[0]=adl[0].copy()
+ 
 if d:
  ps("meta:", meta)
  ps("odl:", odl)
@@ -455,18 +461,20 @@ if ext(fo) in extl:
  if ext(fo)==extl[0]:
   rep("blu-ray")
   if "label" not in ms[0]: rep('label="%s"'%os.path.splitext(os.path.split(fo)[1])[0])
-if os.path.isfile(fj): load=json.load(open(fj))
-else: load={}
+load={}
+if os.path.isfile(fj):
+ try: load=json.load(open(fj))
+ except: ps('Error read "%s"'%fj)
 dump=load.copy()
-for t in mt["s"]:                       # from opt to file
- for k in od["srt"]:
-  if k in md[t] and md[t][k]: dump[k]=md[t][k]
-if dump!=load: json.dump(dump, fp=open(fj, "w"), sort_keys=True, indent=1)
-for k in load:                          # from file to opt
- for t in mt["s"]:
-  if k in md[t] and md[t][k]: continue
+for t in mt["s"]:                       
+ for k in (od["srt"]|{"lang"})&ms[t]:              # from opt to file
+  if md[t][k]: dump[k]=md[t][k]
+ for k in set(load.keys())-ms[t]:       # from file to opt
   md[t][k]=load[k]
   ms[t]|={k}
+if dump and dump!=load:
+ try: json.dump(dump, fp=open(fj, "w"), sort_keys=True, indent=1)
+ except: ps('Error save "%s"'%fj)
 for t, tl in enumerate(ml): #serializ meta
  ll=[]
  for p in md[t]:
