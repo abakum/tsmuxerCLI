@@ -147,6 +147,7 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
       если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
  muxOpt - опции для первой строки fm.meta
  fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
+                          Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
  fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
   selTr - это одна из следующих опций:
    V - выберет видео дорожки
@@ -182,6 +183,7 @@ fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
  do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
  muxOpt - options to be prepened to the first line of "fm.meta"
  fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
+                          If instead of fiList specify fil.txt then fiList in UTF8 encoding will be read from fil.txt
  fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]"
   selTr - is one of the following options:
    V - selects the video tracks
@@ -338,7 +340,7 @@ print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys
 exe=".exe" if os.name=="nt" else ""
 opt="-+=,!"
 fe=de(os.path.splitext(os.path.abspath(argv[0]))[0])
-fj=fe+".json"
+fj=fe+".json" #for SRT options
 fe+=exe #tsMuxeR
 fi="" #input files
 fm="" #meta file
@@ -357,10 +359,17 @@ for a in argv[1:]:                                                       #parse 
  if fin not in odl: odl[fin]=[]
  if a[0] in opt: odl[fin]+=[a]
  elif os.path.isdir(a) or ext(a) in extl: fo=a
- elif "+" in a:
+ elif "+" in a or ext(a)=="txt":
   fin+=mo
-  if not mo: fi=a.rstrip("+")
-  temp=tsMuxeR(a.rstrip("+"))
+  if ext(a)=="txt":
+   nf(a)
+   try:
+    with codecs.open(a, encoding=u8) as f: a=f.read().replace('"', "")
+   except:
+    ps('Error read list of media files from "%s"'%f.name)
+  a=a.strip("+")
+  if not mo: fi=a
+  temp=tsMuxeR(a)
   adl[fin]=set(range(len(meta)+1-mo, len(meta)+len(temp)-mo))
   sdl[fin]=adl[fin].copy()
   meta+=temp[mo:]
@@ -464,7 +473,7 @@ if ext(fo) in extl:
 load={}
 if os.path.isfile(fj):
  try: load=json.load(open(fj))
- except: ps('Error read "%s"'%fj)
+ except: ps('Error read SRT options from "%s"'%fj)
 dump=load.copy()
 for t in mt["s"]:                       
  for k in (od["srt"]|{"lang"})&ms[t]:              # from opt to file
@@ -474,7 +483,7 @@ for t in mt["s"]:
   ms[t]|={k}
 if dump and dump!=load:
  try: json.dump(dump, fp=open(fj, "w"), sort_keys=True, indent=1)
- except: ps('Error save "%s"'%fj)
+ except: ps('Error save SRT options to "%s"'%fj)
 for t, tl in enumerate(ml): #serializ meta
  ll=[]
  for p in md[t]:
