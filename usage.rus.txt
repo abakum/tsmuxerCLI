@@ -14,7 +14,8 @@ fiListLast fiSelLast (-|fiOptListLast)
       если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
  muxOpt - опции для первой строки fm.meta
  fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
- fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
+                          Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
+ fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
   selTr - это одна из следующих опций:
    V - выберет видео дорожки
    A - выберет звуковые дорожки
