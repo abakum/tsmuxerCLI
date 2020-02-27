@@ -12,6 +12,7 @@ where:
  do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
  muxOpt - options to be prepened to the first line of "fm.meta"
  fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
+                          If instead of fiList specify fil.txt then fiList in UTF8 encoding will be read from fil.txt
  fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]"
   selTr - is one of the following options:
    V - selects the video tracks
