@@ -1,42 +1,57 @@
-tsmuxer.py [tsMuxeR[.exe]] [fm.meta] [fo.ext|do] [--muxOpt] \
-fiList fiSel (-|fiOptList) \
-fiList2 fiSel2 (-|fiOptList2) \
+tsMuxeR.py [tsMuxeR[.exe]] [fm.meta] [fo.ext|do] \
+[--muxOpt] \
+[--muxOpt2] \
 ...
-fiListLast fiSelLast (-|fiOptListLast)
+[--muxOptLast] \
+fiList fiSel [-] [fiOptList] \
+fiList2 fiSel2 [-] [fiOptList2] \
+...
+fiListLast fiSelLast [-] [fiOptListLast]
 где:
  tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py
- fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext" и отредактирован
-           в противном случае будет прочитан из fm.meta и отредактирован
+ fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext"
+           и отредактирован. В противном случае будет прочитан из fm.meta и отредактирован.
  fo.ext - выходной файл с расширениями:
   .iso - в muxOpt будут добавлены опции --blu-ray и --label="fo"
-  .ts .m2ts .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
- do - выходной каталог для demux, blu-ray или avchd
+  .ts, .m2ts, .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
+ do - выходной каталог для demux, blu-ray или avchd.
       если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
- muxOpt - опции для первой строки fm.meta
+ muxOpt, ... muxOptLast - опции для первой строки fm.meta
  fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
-                          Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
- fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
-  selTr - это одна из следующих опций:
-   V - выберет видео дорожки
-   A - выберет звуковые дорожки
-   S - выберет дорожки субтитров
-   "foo bar", foobar - выберет только те дорожки, в которых есть эта подстрока
-   [0-9](0-9) - выберет дорожку с этим номером
+                          Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
+  fi, ... fiLast - это один из вариантов:
+   file.ext - имя медиа файла который добавится к склеийке
+   BD, AVCHD - каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls
+   directory - каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога
+   directory/pattern - шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону
+ fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]
+ selTr - это одна из следующих опций:
+  V - выберет видео дорожки
+  A - выберет звуковые дорожки
+  S - выберет дорожки субтитров
+  "foo bar", foobar - выберет только те дорожки, в которых есть эта подстрока
+  [0-9](0-9) - выберет дорожку с этим номером
   ! - инвертирует список выбранных дорожек
-  + - Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2
+  + - Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2.
       Если опущен: "=selTr =selTr2" то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям
- - - закомментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выберет все дорожки текущего fiList
- = - выберет все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr
- fiOptList - список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек fm.meta
+  = - выбирает все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr
+ - - комментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выбирает все дорожки как =
+ fiOptList - список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек
 например:
- "tsmuxer.py i.mkv+ my.ts =S -" создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров
- "tsmuxer.py i.mkv+ my.meta" создаст только my.meta из i.mkv
- "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку SRT субтитров в текущий каталог
- "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" создаст rus.iso с видео дорожками и дорожками для русскоязычных
- "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" из BD3D сделает 2D AVCHD
- "tsmuxer.py --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
-             обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt, запишет указанные SRT опции в "tsmuxer.json" и создаст 42.ts
- "tsmuxer.py --blu-ray 42.ts+43.ts BD" склеит 42.ts и 43.ts в каталог блюрэя BD. Опущенные опции SRT будут прочитаны из "tsmuxer.json"
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" запишет в каталог BD3D1 блюрэй из 3D1.mkv
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
-             объединит BD3D1 и BD3D2 и запишет BD3D
+ "tsmuxer.py my.ts i.mkv+ =S -"
+             создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров
+ "tsmuxer.py my.meta i.mkv+" создаст только my.meta из i.mkv
+ "tsmuxer.py my.meta . =_text =1 ! -"
+             демультиплексирует первую дорожку SRT субтитров в текущий каталог
+ "tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -"
+             создаст rus.iso с видео дорожками и дорожками для русскоязычных
+ "tsmuxer.py AVCHD --avchd BD+ =mvc -" если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)
+             отбросит MVC дорожку и сделает 2D AVCHD
+ "tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
+             обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,
+             запишет указанные SRT опции в tsMuxeR.json и создаст 42.ts
+ "tsmuxer.py BD --blu-ray 42.ts+43.ts" склеит 42.ts и 43.ts в каталог блюрэя BD
+             Опущенные опции SRT будут прочитаны из tsMuxeR.json
+ "tsmuxer.py BD3D1 --blu-ray 3D1.mkv+" запишет в каталог BD3D1 блюрэй из 3D1.mkv
+ "tsmuxer.py BD3D --blu-ray list.txt" если в файле list.txt будет "BD3D1+BD3D2"
+             то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D
