@@ -10,6 +10,7 @@ __metaclass__ = type
 import locale, codecs, os, sys
 u8="utf-8"
 acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
+ru=locale.getlocale()[0] in ("Russian_Russia", "ru_RU")
 def ac(eio):
  py3=sys.version_info.major>2
  global de, en
@@ -26,6 +27,8 @@ def ac(eio):
  ps(eio, "encoding='%s'"%eio.encoding, acp)
 
 import subprocess, inspect, json
+from glob import glob
+from tempfile import NamedTemporaryFile
 from datetime import datetime, timedelta
 if sys.version_info < (3, 6): from collections import OrderedDict
 else: OrderedDict = dict
@@ -34,7 +37,7 @@ shell="SHELL" in os.environ
 def tsMuxeR(*arg):
  if len(arg)>1:
   cmd=(fe,)+arg
-  ps(" ".join(map(q, cmd)))
+  ps(cmd)
   p=subprocess.Popen(map(en, cmd), bufsize=0, universal_newlines=True, stdout=subprocess.PIPE)
   if 1:
    for line in iter(p.stdout.readline, ""): print(line, end="")
@@ -52,13 +55,21 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
  for i, f in enumerate(fl):
   nf(f)
   cmd=(fe,)+(f,)
-  ps(" ".join(map(q, cmd)))
+  ps(cmd)
   try:
-   r=subprocess.check_output(map(en, cmd), stderr=subprocess.STDOUT).decode(acp)
+   bu=subprocess.check_output(map(en, cmd))
   except subprocess.CalledProcessError as e:
    ps("return code:", e.returncode)
    ps("return text:", e.output)
-   exit()
+   exit(1)
+  if not i:
+   if bu.find(b"Network")==0:
+    global fme
+    fme=acp
+  if 1: r=bu.decode(fme)
+  else:
+   try: r=bu.decode(u8) #for tsmuxer>20200203
+   except: r=bu.decode(acp)
   print(r)
   me={}
   li=("Track ID:", "Stream type:", "Stream ID:", "Stream info:", "Stream lang:", "subTrack:")
@@ -70,7 +81,7 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
      me[s]+=[l[len(s):].strip()]
   if not "Stream info:" in me:
    ps('Not found tracks in "%s"'%f)
-   exit()
+   exit(1)
   me["Chapters:"]=[]
   if "Marks:" in me:
    for ch in me["Marks:"]: me["Chapters:"]+=ch.split()
@@ -119,7 +130,7 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
  return mm
 
 def ext(f):
- return de(os.path.splitext(f)[1]).lower().lstrip(".")
+ return de(os.path.splitext(f)[1]).lower().lstrip(os.extsep)
 
 def rep(p, a="", t=0):
  #ps("rep",p,a,t)
@@ -128,103 +139,121 @@ def rep(p, a="", t=0):
   ms[t]-={sed(p, -1)}
  else: ms[t]|={sed(p, t)}
 
-def usage():
+def usage(ec=0):
  ps(argv)
  ps("fe:", fe, "fi:", fi, "fm:", fm, "fo:", fo)
- print(r'''%s [tsMuxeR%s] [fm.meta] [fo.ext|do] [--muxOpt] \
-fiList fiSel (-|fiOptList) \
-fiList2 fiSel2 (-|fiOptList2) \
+ print(r'''%s [tsMuxeR%s] [fm.meta] [fo.ext|do] \
+[--muxOpt] \
+[--muxOpt2] \
 ...
-fiListLast fiSelLast (-|fiOptListLast)'''%(argv[0], exe))
- if locale.getlocale()[0] in ("Russian_Russia", "ru_RU"): print(r'''где:
- tsMuxeR - исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py
- fm.meta - файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext" и отредактирован
-           в противном случае будет прочитан из fm.meta и отредактирован
- fo.ext - выходной файл с расширениями:
-  .iso - в muxOpt будут добавлены опции --blu-ray и --label="fo"
-  .ts .m2ts .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
- do - выходной каталог для demux, blu-ray или avchd
-      если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен
- muxOpt - опции для первой строки fm.meta
- fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
-                          Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
- fiSel, ... fiSelLast - список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]
-  selTr - это одна из следующих опций:
-   V - выберет видео дорожки
-   A - выберет звуковые дорожки
-   S - выберет дорожки субтитров
-   "foo bar", foobar - выберет только те дорожки, в которых есть эта подстрока
-   [0-9](0-9) - выберет дорожку с этим номером
-  ! - инвертирует список выбранных дорожек
-  + - Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2
-      Если опущен: "=selTr =selTr2" то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям
- - - закомментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выберет все дорожки текущего fiList
- = - выберет все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr
- fiOptList - список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек fm.meta
-например:
- "tsmuxer.py i.mkv+ my.ts =S -" создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров
- "tsmuxer.py i.mkv+ my.meta" создаст только my.meta из i.mkv
- "tsmuxer.py my.meta . =_text =1 ! -" демультиплексирует первую дорожку SRT субтитров в текущий каталог
- "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" создаст rus.iso с видео дорожками и дорожками для русскоязычных
- "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" из BD3D сделает 2D AVCHD
- "tsmuxer.py --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
-             обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt, запишет указанные SRT опции в "{0}" и создаст 42.ts
- "tsmuxer.py --blu-ray 42.ts+43.ts BD" склеит 42.ts и 43.ts в каталог блюрэя BD. Опущенные опции SRT будут прочитаны из "{0}"
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" запишет в каталог BD3D1 блюрэй из 3D1.mkv
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
-             объединит BD3D1 и BD3D2 и запишет BD3D
-'''.format(fj))
- else: print(r'''where:
- tsMuxeR - tsMuxeR executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located
- fm.meta - metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext". Otherwise the given "fm.meta" will be used.
- fo.ext - output file with extensions:
-  .iso - options --blu-ray --label="fo" will be added to muxOpt
-  .ts, .m2ts, .mts - options --demux --blu-ray --avchd will be removed from muxOpt
- do - output directory for demux, blu-ray, or avchd. If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started
- muxOpt - options to be prepened to the first line of "fm.meta"
- fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"
-                          If instead of fiList specify fil.txt then fiList in UTF8 encoding will be read from fil.txt
- fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast]"
-  selTr - is one of the following options:
-   V - selects the video tracks
-   A - selects the audio tracks
-   S - selects the subtitle tracks
-   "foo bar", foobar - selects the tracks with the given substring
-   [0-9](0-9) - selects the track by its number
-  ! - inverts the track selection
-  + - if present: "=selTr + =selTr2" selects "selTr" then adds to the selection the tracks that match "selTr2".
-      If omitted: "=selTr =selTr2" selects the tracks that match both "selTr" and "selTr2"
- - - comment all selected tracks by adding # to the beginning of the lines "fm.meta", then select all the tracks of the current "fiList" 
- = - selects all the tracks of the current "fiList". Cancels all the previous "selTr"
- fiOptList - changes the options of the selected tracks. Has the following syntax: ",fiOpt[ ,fiOpt2[... ,fiOptLast]]""
-ex:
- "tsmuxer.py i.mkv+ my.ts =S -" creates "i.mkv.meta" from "i.mkv", excludes the subtitle tracks from it and produces "my.ts"
- "tsmuxer.py i.mkv+ my.meta" creates "my.meta" from "i.mkv"
- "tsmuxer.py my.meta . =_text =1 ! -" demultiplexes the first SRT subtitle track into the current directory
- "tsmuxer.py BD/BDMV/PLAYLIST/00001.mpls+ rus.iso =V + =rus ! -" muxes the BD file "rus.iso" from the video track and the tracks with "rus" in it
- "tsmuxer.py --avchd BD/BDMV/PLAYLIST/00001.mpls+ AVCHD =mvc -" muxes 2D AVCHD from the given BD3D
- "tsmuxer.py --blu-ray --cut-start=28320ms --cut-end=184320ms 00042.MTS+ 42.ts =S - 00042.srt+ ,timeshift=28320 ,font-name=Impact ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"
-             cuts 00042.MTS, strips all the subtitles from it, adds SRT subtitle tracks from 00042.srt, saves given the SRT options to "{0}", and outputs "42.ts"
- "tsmuxer.py --blu-ray 42.ts+43.ts BD" glues 42.ts and 43.ts into the blu-ray directory "BD". Omitted SRT options will be read from "{0}"
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 3D1.mkv+ BD3D1" creates the blu-ray directory "BD3D1" from "3D1.mkv"
- "tsmuxer.py --blu-ray --mplsOffset=1 --m2tsOffset=1 BD1/BDMV/PLAYLIST/00001.mpls+BD2/BDMV/PLAYLIST/00001.mpls BD3D"
-             glues "BD3D1" and "BD3D2" into the blu-ray directory "BD3D"
-'''.format(fj))
- exit()
+[--muxOptLast] \
+fiList fiSel [-] [fiOptList] \
+fiList2 fiSel2 [-] [fiOptList2] \
+...
+fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0], exe))
+ tr("", 'где:',
+        'where:')
+ tr(' tsMuxeR - ', 'исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py',
+                   'executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located')
+ tr(' fm.meta - ', 'файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext"',
+                   'metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext".')
+ tr('           ', 'и отредактирован. В противном случае будет прочитан из fm.meta и отредактирован.',
+                   'Otherwise the given "fm.meta" will be used.')
+ tr(' fo.ext - ', 'выходной файл с расширениями:',
+                  'output file with extensions:')
+ tr('  .iso - ', 'в muxOpt будут добавлены опции --blu-ray и --label="fo"',
+                 'options --blu-ray --label="fo" will be added to muxOpt')
+ tr('  .ts, .m2ts, .mts - ', 'из muxOpt будут удалены опции --demux --blu-ray ---avchd',
+                             'options --demux --blu-ray --avchd will be removed from muxOpt')
+ tr(' do - ', 'выходной каталог для demux, blu-ray или avchd.',
+              'output directory for demux, blu-ray or avchd.')
+ tr('      ', 'если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен',
+            '''If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started''')
+ tr(' muxOpt, ... muxOptLast - ', 'опции для первой строки fm.meta',
+                                  'options to be prepened to the first line of "fm.meta"')
+ tr(' fiList, ... fiListLast - ', 'список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]',
+                                  'list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"')
+ tr('                          ', 'Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt',
+                                  'If instead of "fiList" specify "fil.txt" then "fiList" in UTF8 encoding will be read from "fil.txt"')
+ tr('  fi, ... fiLast - ', 'это один из вариантов:',
+                           'is one of the following variants:')
+ tr('   file.ext - ', 'имя медиа файла который добавится к склеийке',
+                      'name of the media file that is added to the gluing')
+ tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls',
+                       'directories in which there is "BDMV/PLAYLIST/" adds the first mpls to the gluing')
+ tr('   directory - ', 'каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога',
+                       'a directory in which there is no "BDMV/PLAYLIST/" adds all files of directory to the gluing')
+ tr('   directory/pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
+                               'wildcard pattern: ? or * add to the gluing all files matching the pattern')
+ tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
+                                'list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]"')
+ tr(' selTr - ', 'это одна из следующих опций:',
+                 'is one of the following options:')
+ tr('  V - ', 'выберет видео дорожки',
+               'selects the video tracks')
+ tr('  A - ', 'выберет звуковые дорожки',
+               'selects the audio tracks')
+ tr('  S - ', 'выберет дорожки субтитров',
+               'selects the subtitle tracks')
+ tr('  "foo bar", foobar - ', 'выберет только те дорожки, в которых есть эта подстрока',
+                               'selects the tracks with the given substring')
+ tr('  [0-9](0-9) - ', 'выберет дорожку с этим номером',
+                        'selects the track by its number')
+ tr('  ! - ', 'инвертирует список выбранных дорожек',
+              'inverts the track selection')
+ tr('  + - ', 'Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2.',
+              'if present: "=selTr + =selTr2" selects "selTr" then adds to the selection the tracks that match "selTr2".')
+ tr('      ', 'Если опущен: "=selTr =selTr2" то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям',
+              'If omitted: "=selTr =selTr2" selects the tracks that match both "selTr" and "selTr2"')
+ tr('  = - ', 'выбирает все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr',
+              'selects all the tracks of the current "fiList". Cancels all the previous "selTr"')
+ tr(' - - ', 'комментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выбирает все дорожки как =',
+             'comment all selected tracks by adding # to the beginning of the lines "fm.meta", then select all the tracks as =')
+ tr(' fiOptList - ', 'список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек',
+                     'changes the options of the selected tracks. Has the following syntax: ",fiOpt[ ,fiOpt2[... ,fiOptLast]]"')
+ tr("", 'например:',
+        'ex:')
+ tr(' "tsmuxer.py my.ts i.mkv+ =S -"\n             ', 'создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров',
+                                                      'creates "i.mkv.meta" and "my.ts" from "i.mkv" without the subtitle tracks')
+ tr(' "tsmuxer.py my.meta i.mkv+" ', 'создаст только my.meta из i.mkv',
+                                     'creates "my.meta" from "i.mkv"')
+ tr(' "tsmuxer.py my.meta . =_text =1 ! -"\n             ', 'демультиплексирует первую дорожку SRT субтитров в текущий каталог',
+                                                            'demultiplexes the first SRT subtitle track into the current directory')
+ tr(' "tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -"\n             ', 'создаст rus.iso с видео дорожками и дорожками для русскоязычных',
+                                                                                       'muxes "rus.iso" from the video track and the tracks with "rus" in it')
+ tr(' "tsmuxer.py AVCHD --avchd BD+ =mvc -" ', 'если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)',
+                                               'if "BD/" has "BDMV/PLAYLIST/" will find first mpls (ex "00000.mpls")')
+ tr('             ', 'отбросит MVC дорожку и сделает 2D AVCHD',
+                     'excludes the MVC track and muxes 2D AVCHD')
+ if 0: tr(' "tsmuxer.py fromDemuxed.ts fromDemuxed+" ', 'найдёт в fromDemuxed/ все дорожки и сделает fromDemuxed.ts',
+                                                  'will find in "fromDemuxed/" all tracks and produces "fromDemuxed.ts"')
+ print(' "tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"')
+ tr('             ', 'обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,',
+                     'cuts "00042.MTS", strips all the subtitles from it, adds SRT subtitle tracks from "00042.srt",')
+ tr('             ', 'запишет указанные SRT опции в "%s" и создаст 42.ts'%fj,
+                     'saves given the SRT options to "%s", and outputs "42.ts"'%fj)
+ tr(' "tsmuxer.py BD --blu-ray 42.ts+43.ts" ' ,'склеит 42.ts и 43.ts в каталог блюрэя BD',
+                                               'glues 42.ts and 43.ts into the blu-ray directory "BD"')
+ tr('             ' ,'Опущенные опции SRT будут прочитаны из "%s"'%fj,
+                     'Omitted SRT options will be read from "%s"'%fj)
+ tr(' "tsmuxer.py BD3D1 --blu-ray 3D1.mkv+" ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
+                                               'creates the blu-ray directory "BD3D1" from "3D1.mkv"')
+ tr(' "tsmuxer.py BD3D --blu-ray list.txt" ' ,'если в файле list.txt будет "BD3D1+BD3D2"',
+                                              'if in file "list.txt" is "BD3D1+BD3D2"')
+ tr('             ' ,'то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D',
+                     'then glues "BD3D1" with "BD3D2" into the blu-ray directory "BD3D"')
+ exit(ec)
 
 def nf(f):
  if not os.path.isfile(f):
   ps('Not found file "%s"'%f)
-  usage()
+  usage(1)
 
 def ps(*l):
  print(" ".join(map(str, l))+"@"+", ".join(str(x[2]) for x in inspect.stack()[1:]))
 
 def comm(t):
  if t: ml[t][0]="#"+ml[t][0].lstrip("#")
-
-def q(s):
- return '"%s"'%s if " " in s else s
 
 def sed(s, t):
  n, eq, v=s.partition("=")
@@ -239,8 +268,12 @@ def t2f(s):
  
 def f2t(s):
  return (datetime(1970, 1, 1)+timedelta(seconds=s)).strftime("%H:%M:%S.%f")[:12]
+
+def tr(comm, rus, eng):
+ print(comm+(rus if ru else eng))
  
 if __name__!="__main__": exit()#---------------------------------------------------------------------------
+fme=u8
 MO={
  "demux",
  "blu-ray",
@@ -358,16 +391,24 @@ cha=[]
 for a in argv[1:]:                                                       #parse arg
  if fin not in odl: odl[fin]=[]
  if a[0] in opt: odl[fin]+=[a]
- elif os.path.isdir(a) or ext(a) in extl: fo=a
- elif "+" in a or ext(a)=="txt":
+ elif os.path.isdir(a) or ext(a) in extl or a.endswith(os.sep): fo=a
+ elif "+" in a or ext(a)=="txt" or set("*?")&set(a):           #fi
   fin+=mo
   if ext(a)=="txt":
    nf(a)
    try:
     with codecs.open(a, encoding=u8) as f: a=f.read().replace('"', "")
-   except:
-    ps('Error read list of media files from "%s"'%f.name)
+   except: ps('Error read list of media files from "%s"'%f.name)
   a=a.strip("+")
+  fil=[]
+  for inp in a.split("+"):
+   if set("*?")&set(inp): fil+=sorted(glob(inp))
+   elif os.path.isdir(inp):
+    mpls=os.path.join(inp, "BDMV", "PLAYLIST")
+    if os.path.isdir(mpls): fil+=sorted(glob(mpls+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
+    else: fil+=sorted(glob(inp+"/*"))
+   else: fil+=[inp]
+  a="+".join(fil) 
   if not mo: fi=a
   temp=tsMuxeR(a)
   adl[fin]=set(range(len(meta)+1-mo, len(meta)+len(temp)-mo))
@@ -375,19 +416,21 @@ for a in argv[1:]:                                                       #parse 
   meta+=temp[mo:]
   mo=1
  elif ext(a)=="meta": fm=a
- elif ext(a)==exe.lstrip("."):
+ elif ext(a)==exe.lstrip(os.extsep):
   nf(a)
   fe=a
  else: fo=a
 if fi:
- if len(cha)>1: meta[0]+=" --custom-chapters=%s"%";".join(map(f2t, sorted(set(cha))))
- if not fm: fm=fi.split("+")[0]+".meta"
-if not fi:
+ if cha: meta[0]+=" --custom-chapters=%s"%";".join(map(f2t, sorted(set(cha))))
+else:
  nf(fm)
- with codecs.open(fm, encoding=u8) as f: meta=f.read().splitlines() #read fm
+ try:
+  with codecs.open(fm, encoding=fme) as f: meta=f.read().splitlines() #read fm in utf-8
+ except:
+  fme=acp
+  with codecs.open(fm, encoding=fme) as f: meta=f.read().splitlines() #read fm in acp
  adl[0]=set(range(1, len(meta)))
  sdl[0]=adl[0].copy()
- 
 if d:
  ps("meta:", meta)
  ps("odl:", odl)
@@ -476,7 +519,7 @@ if os.path.isfile(fj):
  except: ps('Error read SRT options from "%s"'%fj)
 dump=load.copy()
 for t in mt["s"]:                       
- for k in (od["srt"]|{"lang"})&ms[t]:              # from opt to file
+ for k in (od["srt"]|{"lang"})&ms[t]:   # from opt to file
   if md[t][k]: dump[k]=md[t][k]
  for k in set(load.keys())-ms[t]:       # from file to opt
   md[t][k]=load[k]
@@ -484,7 +527,7 @@ for t in mt["s"]:
 if dump and dump!=load:
  try: json.dump(dump, fp=open(fj, "w"), sort_keys=True, indent=1)
  except: ps('Error save SRT options to "%s"'%fj)
-for t, tl in enumerate(ml): #serializ meta
+for t, tl in enumerate(ml):             #serializ meta
  ll=[]
  for p in md[t]:
   if p in ms[t].copy():
@@ -493,7 +536,18 @@ for t, tl in enumerate(ml): #serializ meta
  for p in ms[t]: ll+=[p]
  if t: meta[t]=", ".join(ml[t][:2]+ll)
  else: meta[t]=" --".join(ml[t][:1]+ll)
-print("\n".join(meta), file=codecs.open(fm, "w", encoding=u8), end="") #write meta
-print(fm+":")
-with codecs.open(fm, encoding=u8) as f: print(f.read())                #print meta
-if fo: tsMuxeR(fm, fo)                                                 #run tsMuxeR fm fo
+mfc="\n".join(meta)
+print((fm or "fm.meta")+":---><8\n"+mfc+"\n8><---")                                                    #print meta
+if fo or fm:
+ fmi=fm
+ if not fmi:
+  if 0: fm=fi.split("+")[0]+".meta"
+  else:
+   ft=NamedTemporaryFile()
+   fm=ft.name
+   ft.close()
+ try: 
+  if fo or fmi: print(mfc, file=codecs.open(fm, "w", encoding=fme), end="")#save meta
+  if fo: tsMuxeR(fm, fo)                                                   #run tsMuxeR fm fo
+ finally: 
+  if not fmi: os.remove(fm)
