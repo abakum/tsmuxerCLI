@@ -274,7 +274,7 @@ def tr(comm, rus, eng):
  print(comm+(rus if ru else eng))
 
 def dq(n, v):
- r=[n]
+ r=[od["c"][n] if n in od["c"] else n]
  if v:
   if n in od["q"] and v.strip('"')==v: v='"%s"'%v
   r+=[v]
@@ -376,7 +376,22 @@ od["q"]={
  "font-name",
  "label",
 }
-
+od["c"]={
+ "delpulldown": "delPulldown",
+ "insertsei": "insertSEI",
+ "forcesei": "forceSEI",
+ "contsps": "contSPS",
+ "subtrack": "subTrack",
+ "pipcorner": "pipCorner",
+ "piphoffset": "pipHOffset",
+ "pipvoffset": "pipVOffset",
+ "pipscale": "pipScale",
+ "piplumma": "pipLumma",
+ "mplsoffset": "mplsOffset",
+ "m2tsoffset": "m2tsOffset",
+ "insertblankpl": "insertBlankPL",
+ "blankoffset": "blankOffset",
+}
 ac(sys.stdout)
 subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
@@ -401,7 +416,7 @@ fin=0 #current fi
 mg={} #default dict for whf
 cha=[]
 for a in argv[1:]:                                                       #parse arg
- if a.lower=="-h":
+ if a.lower()=="-h":
   ru=not ru
   usage()
  if fin not in odl: odl[fin]=[]
@@ -511,7 +526,7 @@ for fin in odl:
    ps(sorted(sdl[fin]))
    plus=0
    continue
-  p=a.lstrip(opt)
+  p=a.lstrip(opt).lower()
   p0=p.split("=")[0] #var name
   for MX in (MO, MB, MC):
    if p0 in MX: ms[0]-=MX
