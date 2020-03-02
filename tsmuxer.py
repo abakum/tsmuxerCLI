@@ -142,6 +142,7 @@ def rep(p, a="", t=0):
 def usage(ec=0):
  ps(argv)
  ps("fe:", fe, "fi:", fi, "fm:", fm, "fo:", fo)
+ j=fj if ec else "tsmuxer.json"
  print(r'''%s [tsMuxeR%s] [fm.meta] [fo.ext|do] \
 [--muxOpt] \
 [--muxOpt2] \
@@ -150,15 +151,15 @@ def usage(ec=0):
 fiList fiSel [-] [fiOptList] \
 fiList2 fiSel2 [-] [fiOptList2] \
 ...
-fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0], exe))
+fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", exe if ec else "[.exe]"))
  tr("", 'где:',
         'where:')
  tr(' tsMuxeR - ', 'исполняемый файл tsMuxeR. Если опущен, то буду искать в каталоге где находится tsmuxer.py',
-                   'executable. If omitted, it will be searched in the directory where "tsmuxer.py" is located')
- tr(' fm.meta - ', 'файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска "tsMuxeR fi.ext"',
-                   'metadata file. If "fiList" is present, "fm.meta" will be created by running "tsMuxeR fi.ext".')
+                   'executable. If omitted, it will be searched in the directory where `tsmuxer.py` is located')
+ tr(' fm.meta - ', 'файл метаданных. Если fiList не опущен, то fm.meta будет создан путём запуска `tsMuxeR fi.ext`',
+                   'metadata file. If `fiList` is present, `fm.meta` will be created by running `tsMuxeR fi.ext`.')
  tr('           ', 'и отредактирован. В противном случае будет прочитан из fm.meta и отредактирован.',
-                   'Otherwise the given "fm.meta" will be used.')
+                   'Otherwise the given `fm.meta` will be used.')
  tr(' fo.ext - ', 'выходной файл с расширениями:',
                   'output file with extensions:')
  tr('  .iso - ', 'в muxOpt будут добавлены опции --blu-ray и --label="fo"',
@@ -167,26 +168,26 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0], exe))
                              'options --demux --blu-ray --avchd will be removed from muxOpt')
  tr(' do - ', 'выходной каталог для demux, blu-ray или avchd.',
               'output directory for demux, blu-ray or avchd.')
- tr('      ', 'если fo.ext и do опущены, то "tsMuxeR fm.meta fo.ext|do" не будет запущен',
-            '''If "fo.ext" and "do" are omitted then "tsMuxeR fm.meta fo.ext|do" won't be started''')
+ tr('      ', 'если fo.ext и do опущены, то `tsMuxeR fm.meta fo.ext|do` не будет запущен',
+            '''If `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started''')
  tr(' muxOpt, ... muxOptLast - ', 'опции для первой строки fm.meta',
-                                  'options to be prepened to the first line of "fm.meta"')
+                                  'options to be prepened to the first line of `fm.meta`')
  tr(' fiList, ... fiListLast - ', 'список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]',
-                                  'list of the media files to be glued. Has the following syntax: "fi+[fi2[+...+fiLast]]"')
+                                  'list of the media files to be glued. Has the following syntax: `fi+[fi2[+...+fiLast]]`')
  tr('                          ', 'Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt',
-                                  'If instead of "fiList" specify "fil.txt" then "fiList" in UTF8 encoding will be read from "fil.txt"')
+                                  'If instead of `fiList` specify `fil.txt` then `fiList` in UTF8 encoding will be read from `fil.txt`')
  tr('  fi, ... fiLast - ', 'это один из вариантов:',
                            'is one of the following variants:')
  tr('   file.ext - ', 'имя медиа файла который добавится к склеийке',
                       'name of the media file that is added to the gluing')
  tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls',
-                       'directories in which there is "BDMV/PLAYLIST/" adds the first mpls to the gluing')
+                       'directories in which there is `BDMV/PLAYLIST/` adds the first mpls to the gluing')
  tr('   directory - ', 'каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога',
-                       'a directory in which there is no "BDMV/PLAYLIST/" adds all files of directory to the gluing')
+                       'a directory in which there is no `BDMV/PLAYLIST/` adds all files of directory to the gluing')
  tr('   directory/pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
                                'wildcard pattern: ? or * add to the gluing all files matching the pattern')
  tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
-                                'list of the tracks selectors. Has the following syntax: "[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]"')
+                                'list of the tracks selectors. Has the following syntax: `[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]`')
  tr(' selTr - ', 'это одна из следующих опций:',
                  'is one of the following options:')
  tr('  V - ', 'выберет видео дорожки',
@@ -195,53 +196,53 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0], exe))
                'selects the audio tracks')
  tr('  S - ', 'выберет дорожки субтитров',
                'selects the subtitle tracks')
- tr('  "foo bar", foobar - ', 'выберет только те дорожки, в которых есть эта подстрока',
+ tr('  `foo bar`, foobar - ', 'выберет только те дорожки, в которых есть эта подстрока',
                                'selects the tracks with the given substring')
  tr('  [0-9](0-9) - ', 'выберет дорожку с этим номером',
                         'selects the track by its number')
  tr('  ! - ', 'инвертирует список выбранных дорожек',
               'inverts the track selection')
- tr('  + - ', 'Если задан: "=selTr + =selTr2" то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2.',
-              'if present: "=selTr + =selTr2" selects "selTr" then adds to the selection the tracks that match "selTr2".')
- tr('      ', 'Если опущен: "=selTr =selTr2" то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям',
-              'If omitted: "=selTr =selTr2" selects the tracks that match both "selTr" and "selTr2"')
+ tr('  + - ', 'Если задан: `=selTr + =selTr2` то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2.',
+              'if present: `=selTr + =selTr2` selects `selTr` then adds to the selection the tracks that match `selTr2`.')
+ tr('      ', 'Если опущен: `=selTr =selTr2` то в списке выбраннвх дорожек останутся только дорожки, удовлетворяющие обоим условиям',
+              'If omitted: `=selTr =selTr2` selects the tracks that match both `selTr` and `selTr2`')
  tr('  = - ', 'выбирает все дорожки текущего fiList. Отменяет эффект всех ранее введенных selTr',
-              'selects all the tracks of the current "fiList". Cancels all the previous "selTr"')
+              'selects all the tracks of the current `fiList`. Cancels all the previous `selTr`')
  tr(' - - ', 'комментирует все выбранные дорожки, добавив # в начало строк fm.meta, затем выбирает все дорожки как =',
-             'comment all selected tracks by adding # to the beginning of the lines "fm.meta", then select all the tracks as =')
+             'comment all selected tracks by adding # to the beginning of the lines `fm.meta`, then select all the tracks as =')
  tr(' fiOptList - ', 'список опций вида: ,fiOpt[ ,fiOpt2[... ,fiOptLast]] изменит применимые опции для выбранных ранее дорожек',
-                     'changes the options of the selected tracks. Has the following syntax: ",fiOpt[ ,fiOpt2[... ,fiOptLast]]"')
+                     'changes the options of the selected tracks. Has the following syntax: `,fiOpt[ ,fiOpt2[... ,fiOptLast]]`')
  tr("", 'например:',
         'ex:')
- tr(' "tsmuxer.py my.ts i.mkv+ =S -"\n             ', 'создаст из i.mkv i.mkv.meta и my.ts без дорожек субтитров',
-                                                      'creates "i.mkv.meta" and "my.ts" from "i.mkv" without the subtitle tracks')
- tr(' "tsmuxer.py my.meta i.mkv+" ', 'создаст только my.meta из i.mkv',
-                                     'creates "my.meta" from "i.mkv"')
- tr(' "tsmuxer.py my.meta . =_text =1 ! -"\n             ', 'демультиплексирует первую дорожку SRT субтитров в текущий каталог',
+ tr(' `tsmuxer.py my.ts i.mkv+ =S -`\n             ', 'создаст из i.mkv my.ts без дорожек субтитров',
+                                                      'creates `my.ts` from `i.mkv` without the subtitle tracks')
+ tr(' `tsmuxer.py my.meta i.mkv+` ', 'создаст только my.meta из i.mkv',
+                                     'creates `my.meta` from `i.mkv`')
+ tr(' `tsmuxer.py my.meta . =_text =1 ! -`\n             ', 'демультиплексирует первую дорожку SRT субтитров в текущий каталог',
                                                             'demultiplexes the first SRT subtitle track into the current directory')
- tr(' "tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -"\n             ', 'создаст rus.iso с видео дорожками и дорожками для русскоязычных',
-                                                                                       'muxes "rus.iso" from the video track and the tracks with "rus" in it')
- tr(' "tsmuxer.py AVCHD --avchd BD+ =mvc -" ', 'если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)',
-                                               'if "BD/" has "BDMV/PLAYLIST/" will find first mpls (ex "00000.mpls")')
+ tr(' `tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -`\n             ', 'создаст rus.iso с видео дорожками и дорожками для русскоязычных',
+                                                                                       'muxes `rus.iso` from the video track and the tracks with `rus` in it')
+ tr(' `tsmuxer.py AVCHD --avchd BD+ =mvc -` ', 'если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)',
+                                               'if `BD/` has `BDMV/PLAYLIST/` will find first mpls (ex `00000.mpls`)')
  tr('             ', 'отбросит MVC дорожку и сделает 2D AVCHD',
                      'excludes the MVC track and muxes 2D AVCHD')
- if 0: tr(' "tsmuxer.py fromDemuxed.ts fromDemuxed+" ', 'найдёт в fromDemuxed/ все дорожки и сделает fromDemuxed.ts',
-                                                  'will find in "fromDemuxed/" all tracks and produces "fromDemuxed.ts"')
- print(' "tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus"')
+ if 0: tr(' `tsmuxer.py fromDemuxed.ts fromDemuxed+` ', 'найдёт в fromDemuxed/ все дорожки и сделает fromDemuxed.ts',
+                                                  'will find in `fromDemuxed/` all tracks and produces `fromDemuxed.ts`')
+ print(' `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`')
  tr('             ', 'обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,',
-                     'cuts "00042.MTS", strips all the subtitles from it, adds SRT subtitle tracks from "00042.srt",')
- tr('             ', 'запишет указанные SRT опции в "%s" и создаст 42.ts'%fj,
-                     'saves given the SRT options to "%s", and outputs "42.ts"'%fj)
- tr(' "tsmuxer.py BD --blu-ray 42.ts+43.ts" ' ,'склеит 42.ts и 43.ts в каталог блюрэя BD',
-                                               'glues 42.ts and 43.ts into the blu-ray directory "BD"')
- tr('             ' ,'Опущенные опции SRT будут прочитаны из "%s"'%fj,
-                     'Omitted SRT options will be read from "%s"'%fj)
- tr(' "tsmuxer.py BD3D1 --blu-ray 3D1.mkv+" ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
-                                               'creates the blu-ray directory "BD3D1" from "3D1.mkv"')
- tr(' "tsmuxer.py BD3D --blu-ray list.txt" ' ,'если в файле list.txt будет "BD3D1+BD3D2"',
-                                              'if in file "list.txt" is "BD3D1+BD3D2"')
+                     'cuts `00042.MTS`, strips all the subtitles from it, adds SRT subtitle tracks from `00042.srt`,')
+ tr('             ', 'запишет указанные SRT опции в `%s` и создаст 42.ts'%j,
+                     'saves given the SRT options to `%s`, and outputs `42.ts`'%j)
+ tr(' `tsmuxer.py BD --blu-ray 42.ts+43.ts` ' ,'склеит 42.ts и 43.ts в каталог блюрэя BD',
+                                               'glues 42.ts and 43.ts into the blu-ray directory `BD`')
+ tr('             ' ,'Опущенные опции SRT будут прочитаны из `%s`'%j,
+                     'Omitted SRT options will be read from `%s`'%j)
+ tr(' `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
+                                               'creates the blu-ray directory `BD3D1` from `3D1.mkv`')
+ tr(' `tsmuxer.py BD3D --blu-ray list.txt` ' ,'если в файле list.txt будет `BD3D1+BD3D2`',
+                                              'if in file `list.txt` is `BD3D1+BD3D2`')
  tr('             ' ,'то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D',
-                     'then glues "BD3D1" with "BD3D2" into the blu-ray directory "BD3D"')
+                     'then glues `BD3D1` with `BD3D2` into the blu-ray directory `BD3D`')
  exit(ec)
 
 def nf(f):
@@ -271,6 +272,13 @@ def f2t(s):
 
 def tr(comm, rus, eng):
  print(comm+(rus if ru else eng))
+
+def dq(n, v):
+ r=[n]
+ if v:
+  if n in od["q"] and v.strip('"')==v: v='"%s"'%v
+  r+=[v]
+ return "=".join(r)
  
 if __name__!="__main__": exit()#---------------------------------------------------------------------------
 fme=u8
@@ -299,7 +307,7 @@ M=MO|MB|MC|MS|{
  "pcr-on-video-pid",
  "new-audio-pes",
  "vbv-len",
- #"no-asyncio",
+ "no-asyncio",
  "cut-start",
  "cut-end",
  "right-eye",
@@ -309,7 +317,7 @@ M=MO|MB|MC|MS|{
  "insertblankpl",
  "blankoffset",
  "label",
- #"extra-iso-space",
+ "extra-iso-space",
 }
 VAS={
  "track",
@@ -364,13 +372,16 @@ od["srt"]={
  "default",
 }
 od["s"]=od["S"]|od["srt"]
+od["q"]={
+ "font-name",
+ "label",
+}
 
 ac(sys.stdout)
 subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
-argv=[de(x) for x in sys.argv]
-print("_`".join(argv))
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
-exe=".exe" if os.name=="nt" else ""
+argv=[de(x) for x in sys.argv]
+exe=".exe" if os.name=="nt" or sys.platform in ("msys", "win32") else ""
 opt="-+=,!"
 fe=de(os.path.splitext(os.path.abspath(argv[0]))[0])
 fj=fe+".json" #for SRT options
@@ -379,6 +390,7 @@ fi="" #input files
 fm="" #meta file
 fo="" #output file or dir
 if len(sys.argv)<2: usage() #./tsmuxer.py
+ps(argv)
 odl={} #dict of options
 adl={} #dict of all tracks
 sdl={} #dict of selected tracks
@@ -389,6 +401,9 @@ fin=0 #current fi
 mg={} #default dict for whf
 cha=[]
 for a in argv[1:]:                                                       #parse arg
+ if a.lower=="-h":
+  ru=not ru
+  usage()
  if fin not in odl: odl[fin]=[]
  if a[0] in opt: odl[fin]+=[a]
  elif os.path.isdir(a) or ext(a) in extl or a.endswith(os.sep): fo=a
@@ -532,7 +547,7 @@ for t, tl in enumerate(ml):             #serializ meta
  for p in md[t]:
   if p in ms[t].copy():
    ms[t]-={p}
-   ll+=[(p+"="+md[t][p]).rstrip("=")]
+   ll+=[dq(p, md[t][p])]
  for p in ms[t]: ll+=[p]
  if t: meta[t]=", ".join(ml[t][:2]+ll)
  else: meta[t]=" --".join(ml[t][:1]+ll)
