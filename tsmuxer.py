@@ -36,13 +36,12 @@ shell="SHELL" in os.environ
 
 def tsMuxeR(*arg):
  if len(arg)>1:
-  cmd=(fe,)+arg
+  cmd=(fe,)+arg[:2]
   ps(cmd)
-  p=subprocess.Popen(map(en, cmd), bufsize=0, universal_newlines=True, stdout=subprocess.PIPE)
-  if 1:
-   for line in iter(p.stdout.readline, ""): print(line, end="")
+  if 1: returncode=subprocess.call(map(en, cmd))
   else:
-   while p.poll() is None: print(p.stdout.read(1), end="")
+   p=subprocess.Popen(map(en, cmd), bufsize=0, universal_newlines=True, stdout=subprocess.PIPE)
+   for line in iter(p.stdout.readline, ""): print(line, end="")
   return
  if 0: return r'''MUXOPT --no-pcr-on-video-pid --vbr --vbv-len=500
 V_MPEG4/ISO/AVC, 00045.MTS, track=4113
@@ -109,8 +108,9 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
    ll=[tl]
    ll+=[qfi]
    if "Track ID:" in me: ll+=['track=%s'%me["Track ID:"][t]]
-   if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subTrack=%s'%me["subTrack:"][t]]
+   if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subtrack=%s'%me["subTrack:"][t]]
    if "Stream lang:" in me and me["Stream lang:"][t]: ll+=['lang=%s'%me["Stream lang:"][t]]
+   if "/i" in tl.lower(): ll+=["contsps"]
    if "s"==tl.lower().lstrip("#")[0]:
     for lgd in (me, mg):
      if "Frame rate:" in lgd:
@@ -264,7 +264,7 @@ def sed(s, t):
  return n
 
 def t2f(s):
- try: return sum([60**(2-i)*k for i, k in enumerate(map(float, (("0:0:"+s).split(':'))[-3:]))])
+ try: return sum([60**(2-i)*k for i, k in enumerate(map(float, (("0:0:"+s.replace(",", ".")).split(':'))[-3:]))])
  except: return 0.0
  
 def f2t(s):
@@ -274,9 +274,11 @@ def tr(comm, rus, eng):
  print(comm+(rus if ru else eng))
 
 def dq(n, v):
- r=[od["c"][n] if n in od["c"] else n]
+ r=[od["c"].get(n, n)]
  if v:
   if n in od["q"] and v.strip('"')==v: v='"%s"'%v
+  elif n.startswith("cut") and not set("ms")&set(v): v="%ims"%(t2f(v)*1000)
+  elif n.startswith("time") and set(":.,")&set(v): v="%i"%(t2f(v)*1000)
   r+=[v]
  return "=".join(r)
  
@@ -329,7 +331,7 @@ od["v"]={
  "insertsei",
  "forcesei",
  "contsps",
- "subTrack",
+ "subtrack",
  "secondary",
  "pipcorner",
  "piphoffset",
@@ -410,7 +412,7 @@ odl={} #dict of options
 adl={} #dict of all tracks
 sdl={} #dict of selected tracks
 meta=[] #metadata dict
-extl=("iso", "ts", "m2ts", "mts")
+extl=("iso", "ts", "m2ts")
 mo=0 #meta line copy
 fin=0 #current fi
 mg={} #default dict for whf
@@ -420,7 +422,9 @@ for a in argv[1:]:                                                       #parse 
   ru=not ru
   usage()
  if fin not in odl: odl[fin]=[]
- if a[0] in opt: odl[fin]+=[a]
+ if a[0] in opt:
+  odl[fin]+=[a]
+  continue
  elif os.path.isdir(a) or ext(a) in extl or a.endswith(os.sep): fo=a
  elif "+" in a or ext(a)=="txt" or set("*?")&set(a):           #fi
   fin+=mo
@@ -567,7 +571,7 @@ for t, tl in enumerate(ml):             #serializ meta
  if t: meta[t]=", ".join(ml[t][:2]+ll)
  else: meta[t]=" --".join(ml[t][:1]+ll)
 mfc="\n".join(meta)
-print((fm or "fm.meta")+":---><8\n"+mfc+"\n8><---")                                                    #print meta
+print("8><---"+(fm or "fm.meta")+":\n"+mfc+"\n8><---")                                                    #print meta
 if fo or fm:
  fmi=fm
  if not fmi:
