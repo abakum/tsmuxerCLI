@@ -45,3 +45,12 @@ creates the blu-ray directory `BD3D1` from `3D1.mkv`
 tsmuxer.py BD3D --blu-ray list.txt
 ```
 if in file `list.txt` is `BD3D1+BD3D2` then glues `BD3D1` with `BD3D2` into the blu-ray directory `BD3D`
+
+```
+tsmuxer.py dir_with_demuxed a.ts+ =track=4352 + =track=4353 ! -
+```
+or 
+```
+tsmuxer.py dir_with_demuxed a.ts+ =track=0x1100 + =track=0x1101 ! -
+```
+for demux track 0x1100 and track 0x1101 from a.ts to dir_with_demuxed
