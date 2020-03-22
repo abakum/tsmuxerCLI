@@ -53,4 +53,4 @@ or
 ```
 tsmuxer.py dir_with_demuxed a.ts+ =track=0x1100 + =track=0x1101 ! -
 ```
-for demux track 0x1100 and track 0x1101 from a.ts to dir_with_demuxed
+demuxed track 0x1100 and track 0x1101 from a.ts to dir_with_demuxed
