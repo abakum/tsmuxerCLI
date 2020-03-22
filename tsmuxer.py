@@ -520,6 +520,8 @@ for fin in odl:
     else:
      if len(sdl[fin])>int(a)-1: sdl[fin]={sorted(sdl[fin])[int(a)-1]}
    else:                  #substr
+    hex=a.split("=0x")
+    if len(hex)>1: a="=".join((hex[0], str(int(hex[1] ,16))))
     if plus:
      for t in adl[fin]:
       if a.lower() in ", ".join(ml[t]).lower(): sdl[fin]|={t}
