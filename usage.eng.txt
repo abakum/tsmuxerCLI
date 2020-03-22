@@ -47,7 +47,7 @@ ex:
              muxes `rus.iso` from the video track and the tracks with `rus` in it
  `tsmuxer.py AVCHD --avchd BD+ =mvc -` if `BD/` has `BDMV/PLAYLIST/` will find first mpls (ex `00000.mpls`)
              excludes the MVC track and muxes 2D AVCHD
- `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`
+ `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320ms ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`
              cuts `00042.MTS`, strips all the subtitles from it, adds SRT subtitle tracks from `00042.srt`,
              saves given the SRT options to `tsmuxer.json`, and outputs `42.ts`
  `tsmuxer.py BD --blu-ray 42.ts+43.ts` glues 42.ts and 43.ts into the blu-ray directory `BD`
