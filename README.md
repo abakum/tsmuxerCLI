@@ -38,6 +38,12 @@ tsmuxer.py BD --blu-ray 42.ts+43.ts
 ```
 glues 42.ts and 43.ts into the blu-ray directory `BD` Omitted SRT options will be read from `tsmuxer.json`
 ```
+tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10 
+tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20 
+tsmuxer.py MT
+```
+makes 2-title BD `MT` where `tsmuxer.py MT` rebuild with help of  MPLS2JSON.exe index.bdmv and MovieObject.bdmv
+```
 tsmuxer.py BD3D1 --blu-ray 3D1.mkv+
 ```
 creates the blu-ray directory `BD3D1` from `3D1.mkv`
