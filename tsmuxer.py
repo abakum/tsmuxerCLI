@@ -258,7 +258,9 @@ def bdmv(s='''{
   ]
  }
 }''', mo=1):
- cmd=[f2, "-reverse", "-", os.path.join(fo, "BDMV", ("MovieObject" if mo else "index")+".bdmv")]
+ fb=("MovieObject" if mo else "index")+".bdmv"
+ sour=os.path.join(fo, "BDMV", fb)
+ cmd=[f2, "-reverse", "-", sour]
  ps(cmd)
  if d: ps(s)
  try:
@@ -271,6 +273,11 @@ def bdmv(s='''{
  except OSError as e:
   ps(str(e))
   exit(1)
+ if not p.returncode:
+  dest=os.path.join(fo, "BDMV", "BACKUP", fb)
+  try:
+   with open(sour, 'rb') as src, open(dest, 'wb') as dst: dst.write(src.read())
+  except IOError as e: ps(str(e))
  return p.returncode
  
 def mpls(s):
@@ -811,8 +818,8 @@ for a in argv[1:]:                                                       #parse 
   for inp in a.split("+"):
    if set("*?")&set(inp): fil+=sorted(glob(inp))
    elif os.path.isdir(inp):
-    mpls=os.path.join(inp, "BDMV", "PLAYLIST")
-    if os.path.isdir(mpls): fil+=sorted(glob(mpls+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
+    PLAYLIST=os.path.join(inp, "BDMV", "PLAYLIST")
+    if os.path.isdir(PLAYLIST): fil+=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
     else: fil+=sorted(glob(inp+"/*"))
    else: fil+=[inp]
   a="+".join(fil) 
@@ -963,4 +970,3 @@ if fo or fm:
   if fo: tsMuxeR(fm, fo)                                                   #run tsMuxeR fm fo
  finally: 
   if not fmi: os.remove(fm)
- do()
