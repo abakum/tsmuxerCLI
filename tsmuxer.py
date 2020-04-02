@@ -34,11 +34,382 @@ if sys.version_info < (3, 6): from collections import OrderedDict
 else: OrderedDict = dict
 shell="SHELL" in os.environ
 
+def bdmv(s='''{
+ "MOBJ": {
+  "version_number": "0200",
+  "reserved_header": [
+   0
+  ],
+ "MovieObjects": [
+   {
+    "resume_intention_flag": 0,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 1346371585,
+      "operand_1": 4,
+      "operand_2": 2,
+      "command": "Move reg_4 2"
+     },
+     {
+      "operation_code": 562102272,
+      "operand_1": 1,
+      "operand_2": 0,
+      "command": "Jump_Title 1"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 0,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 0,
+      "operand_1": 0,
+      "operand_2": 0,
+      "command": "Nop"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 1,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 830472202,
+      "operand_1": 0,
+      "operand_2": 0,
+      "command": "SetOutputMode 0"
+     },
+     {
+      "operation_code": 1342177281,
+      "operand_1": 4,
+      "operand_2": 2147483652,
+      "command": "Move reg_4 reg_2147483652"
+     },
+     {
+      "operation_code": 1346371587,
+      "operand_1": 4,
+      "operand_2": 1,
+      "command": "Add reg_4 1"
+     },
+     {
+      "operation_code": 570425344,
+      "operand_1": 2147483652,
+      "operand_2": 0,
+      "command": "Play_PL reg_2147483652"
+     },
+     {
+      "operation_code": 553713664,
+      "operand_1": 4,
+      "operand_2": 0,
+      "command": "Jump_Title reg_4"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 1,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 830472202,
+      "operand_1": 0,
+      "operand_2": 0,
+      "command": "SetOutputMode 0"
+     },
+     {
+      "operation_code": 1346371585,
+      "operand_1": 4,
+      "operand_2": 1,
+      "command": "Move reg_4 1"
+     },
+     {
+      "operation_code": 570425344,
+      "operand_1": 2147483652,
+      "operand_2": 0,
+      "command": "Play_PL reg_2147483652"
+     },
+     {
+      "operation_code": 553713664,
+      "operand_1": 4,
+      "operand_2": 0,
+      "command": "Jump_Title reg_4"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 1,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 553713664,
+      "operand_1": 4,
+      "operand_2": 0,
+      "command": "Jump_Title reg_4"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 1,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 830472202,
+      "operand_1": 1,
+      "operand_2": 0,
+      "command": "SetOutputMode 1"
+     },
+     {
+      "operation_code": 1342177281,
+      "operand_1": 4,
+      "operand_2": 2147483652,
+      "command": "Move reg_4 reg_2147483652"
+     },
+     {
+      "operation_code": 1346371587,
+      "operand_1": 4,
+      "operand_2": 1,
+      "command": "Add reg_4 1"
+     },
+     {
+      "operation_code": 570425344,
+      "operand_1": 2147483652,
+      "operand_2": 0,
+      "command": "Play_PL reg_2147483652"
+     },
+     {
+      "operation_code": 553713664,
+      "operand_1": 4,
+      "operand_2": 0,
+      "command": "Jump_Title reg_4"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 1,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 830472202,
+      "operand_1": 1,
+      "operand_2": 0,
+      "command": "SetOutputMode 1"
+     },
+     {
+      "operation_code": 1346371585,
+      "operand_1": 4,
+      "operand_2": 1,
+      "command": "Move reg_4 1"
+     },
+     {
+      "operation_code": 570425344,
+      "operand_1": 2147483652,
+      "operand_2": 0,
+      "command": "Play_PL reg_2147483652"
+     },
+     {
+      "operation_code": 553713664,
+      "operand_1": 4,
+      "operand_2": 0,
+      "command": "Jump_Title reg_4"
+     }
+    ]
+   },
+   {
+    "resume_intention_flag": 0,
+    "menu_call_mask": 0,
+    "title_search_mask": 0,
+    "reserved01": 0,
+    "NavigationCommand": [
+     {
+      "operation_code": 830472202,
+      "operand_1": 1,
+      "operand_2": 0,
+      "command": "SetOutputMode 1"
+     },
+     {
+      "operation_code": 1346371585,
+      "operand_1": 4,
+      "operand_2": 2,
+      "command": "Move reg_4 2"
+     },
+     {
+      "operation_code": 562102272,
+      "operand_1": 1,
+      "operand_2": 0,
+      "command": "Jump_Title 1"
+     }
+    ]
+   }
+  ]
+ }
+}''', mo=1):
+ cmd=[f2, "-reverse", "-", os.path.join(fo, "BDMV", ("MovieObject" if mo else "index")+".bdmv")]
+ ps(cmd)
+ if d: ps(s)
+ try:
+  p=subprocess.Popen(map(en, cmd), stdin=subprocess.PIPE)
+  p.communicate(s)
+ except subprocess.CalledProcessError as e:
+  ps("return code:", e.returncode)
+  ps("return text:", e.output)
+  exit(1)
+ except OSError as e:
+  ps(str(e))
+  exit(1)
+ return p.returncode
+ 
+def mpls(s):
+ cmd=[f2, s]
+ ps(cmd)
+ bu=b""
+ try: bu=subprocess.Popen(map(en, cmd), stdout=subprocess.PIPE).communicate()[0]
+ except subprocess.CalledProcessError as e: ps("return code:", e.returncode, "\nreturn text:", e.output)
+ except OSError as e: ps(str(e))
+ r=bu.decode() if bu.startswith(b"{") else '{"MPLS": {}}'
+ if d: ps(r)
+ return r
+
+def do():
+ global f2
+ f2=fe.replace(name(argv[0]), "MPLS2JSON")
+ if not os.path.isfile(f2):
+  ps('Not found "%s"'%f2)
+  return
+ bdjo=1 if os.path.isfile(os.path.join(fo, "BDMV", "BDJO", "00000.bdjo")) else 0
+ ps("BDJO", bdjo)
+ PLAYLIST=os.path.join(fo, "BDMV", "PLAYLIST")
+ if not os.path.isdir(PLAYLIST): return                                          
+ pl=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))
+ lenpl=len(pl)
+ if not lenpl: return
+ if bdmv(): return
+ matrix='''
+2D             object_type playback_type mobj_id_ref bdjo_file_name
+FirstPlayback  1           0             0           x
+TopMenu        1           1             4           x
+TitleLast      1           0             3           x
+Title          1           0             2           x
+
+3D             object_type playback_type mobj_id_ref bdjo_file_name
+FirstPlayback  1           0             0           x
+TopMenu        1           1             4           x
+TitleLast      1           0             6           x
+Title          1           0             5           x
+
+2Djava         object_type playback_type mobj_id_ref bdjo_file_name
+FirstPlayback  1           0             7           x
+TopMenu        1           1             1           x
+TitleFirst     2           0             x           00000
+TitleLast      1           0             3           x
+Title          1           0             2           x
+
+3Djava         object_type playback_type mobj_id_ref bdjo_file_name
+FirstPlayback  1           0             7           x
+TopMenu        1           1             1           x
+TitleFirst     2           0             x           00000
+TitleLast      1           0             6           x
+Title          1           0             5           x
+'''
+ bdj='''{
+     "object_type": 2,
+     "access_type": 0,
+     "reserved01": 0,
+     "playback_type": 0,
+     "reserved02": 0,
+     "bdjo_file_name": "00000",
+     "reserved03": 0
+    }'''
+ bdt='''{
+     "object_type": 1,
+     "access_type": 0,
+     "reserved01": 0,
+     "playback_type": 0,
+     "reserved02": 0,
+     "mobj_id_ref": %s,
+     "reserved03": 0
+    }'''
+ cpud=str(list(map(ord, (os.path.basename(argv[0])+ "\0"*32)[:32])))
+ indx='''{
+ "INDX": {
+  "version_number": "0200",
+  "reserved_header": [
+   0
+  ],
+  "AppInfoBDMV": {
+   "reserved01": 0,
+   "initial_output_mode_preference": %s,
+   "SS_content_exist_flag": %s,
+   "reserved02": 0,
+   "video_format": "0",
+   "frame_rate": "0",
+   "content_provider_user_data": %s
+  },
+  "Indexes": {
+   "FirstPlayback": {
+    "object_type": 1,
+    "access_type": 0,
+    "reserved01": 0,
+    "playback_type": 0,
+    "reserved02": 0,
+    "mobj_id_ref": %s,
+    "reserved03": 0
+   },
+   "TopMenu": {
+    "object_type": 1,
+    "access_type": 0,
+    "reserved01": 0,
+    "playback_type": 1,
+    "reserved02": 0,
+    "mobj_id_ref": %s,
+    "reserved03": 0
+   },
+   "Title": [
+    %s
+   ]
+  }
+ }
+}
+'''
+ tl=[]
+ SS_content_exist_flag=0
+ initial_output_mode_preference=0
+ for ti, p in enumerate(pl):
+  SS_content=3 if "ExtensionData" in json.loads(mpls(p))["MPLS"] else 0
+  if SS_content:
+   ps("3D", SS_content)
+   SS_content_exist_flag=1
+   if not ti: initial_output_mode_preference=1
+  tl+=[bdt%((2 if ti<lenpl-1 else 3)+SS_content)]
+ if bdjo: tl[0]=bdj
+ bdmv(indx%(initial_output_mode_preference,
+            SS_content_exist_flag,
+            cpud,
+            7*SS_content_exist_flag*bdjo,
+            1 if bdjo else 4,
+            ",".join(tl)), 0)
+
 def tsMuxeR(*arg):
  if len(arg)>1:
   cmd=(fe,)+arg[:2]
   ps(cmd)
-  if 1: returncode=subprocess.call(map(en, cmd))
+  if 1:
+   try: err=subprocess.call(map(en, cmd))
+   except OSError as e: ps(str(e))
   else:
    p=subprocess.Popen(map(en, cmd), bufsize=0, universal_newlines=True, stdout=subprocess.PIPE)
    for line in iter(p.stdout.readline, ""): print(line, end="")
@@ -55,20 +426,19 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
   nf(f)
   cmd=(fe,)+(f,)
   ps(cmd)
-  try:
-   bu=subprocess.check_output(map(en, cmd))
+  try: bu=subprocess.check_output(map(en, cmd))
   except subprocess.CalledProcessError as e:
    ps("return code:", e.returncode)
    ps("return text:", e.output)
    exit(1)
+  except OSError as e:
+   ps(str(e))
+   exit(1)
   if not i:
-   if bu.find(b"Network")==0:
+   if bu.startswith(b"Network"):
     global fme
     fme=acp
-  if 1: r=bu.decode(fme)
-  else:
-   try: r=bu.decode(u8) #for tsmuxer>20200203
-   except: r=bu.decode(acp)
+  r=bu.decode(fme)
   print(r)
   me={}
   li=("Track ID:", "Stream type:", "Stream ID:", "Stream info:", "Stream lang:", "subTrack:")
@@ -131,6 +501,9 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
 
 def ext(f):
  return de(os.path.splitext(f)[1]).lower().lstrip(os.extsep)
+
+def name(f):
+ return de(os.path.splitext(os.path.basename(f))[0])
 
 def rep(p, a="", t=0):
  #ps("rep",p,a,t)
@@ -457,6 +830,9 @@ for a in argv[1:]:                                                       #parse 
 if fi:
  if cha: meta[0]+=" --custom-chapters=%s"%";".join(map(f2t, sorted(set(cha))))
 else:
+ if not os.path.isfile(fm) and fo:
+  do()
+  exit()
  nf(fm)
  try:
   with codecs.open(fm, encoding=fme) as f: meta=f.read().splitlines() #read fm in utf-8
@@ -587,3 +963,4 @@ if fo or fm:
   if fo: tsMuxeR(fm, fo)                                                   #run tsMuxeR fm fo
  finally: 
   if not fmi: os.remove(fm)
+ do()
