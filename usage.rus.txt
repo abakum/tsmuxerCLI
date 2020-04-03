@@ -16,11 +16,13 @@ fiListLast fiSelLast [-] [fiOptListLast]
   .ts, .m2ts, .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
  do - выходной каталог для demux, blu-ray или avchd.
       если fo.ext и do опущены, то `tsMuxeR fm.meta fo.ext|do` не будет запущен
+      если fm.meta и все fiList опущены но указан do в котором есть do/BDMV/PLAYLIST/*.mpls, то do/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
+      MPLS2JSON.exe из BDTools https://forum.doom9.org/showthread.php?t=174563 используется для этого. Сделай ссылку на него или скопируй туда где tsMuxeR.exe
  muxOpt, ... muxOptLast - опции для первой строки fm.meta
  fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
                           Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
   fi, ... fiLast - это один из вариантов:
-   file.ext - имя медиа файла который добавится к склеийке
+   file.ext - имя медиа файла который добавится к склейке
    BD, AVCHD - каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls
    directory - каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога
    directory/pattern - шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону
@@ -52,6 +54,9 @@ fiListLast fiSelLast [-] [fiOptListLast]
              запишет указанные SRT опции в `tsmuxer.json` и создаст 42.ts
  `tsmuxer.py BD --blu-ray 42.ts+43.ts` склеит 42.ts и 43.ts в каталог блюрэя BD
              Опущенные опции SRT будут прочитаны из `tsmuxer.json`
+ `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` запишет первый тайтл блюрэя в MT
+ `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` запишет второй тайтл блюрэя в MT
+ `tsmuxer.py MT` MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` запишет в каталог BD3D1 блюрэй из 3D1.mkv
  `tsmuxer.py BD3D --blu-ray list.txt` если в файле list.txt будет `BD3D1+BD3D2`
              то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D
