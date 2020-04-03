@@ -42,7 +42,7 @@ tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10
 tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20 
 tsmuxer.py MT
 ```
-makes 2-title blu-ray directory `MT` where `tsmuxer.py MT` rebuild with help of MPLS2JSON.exe index.bdmv and MovieObject.bdmv
+makes 2-title blu-ray directory `MT` where `tsmuxer.py MT` rebuild index.bdmv and MovieObject.bdmv with help of MPLS2JSON.exe 
 ```
 tsmuxer.py BD3D1 --blu-ray 3D1.mkv+
 ```
