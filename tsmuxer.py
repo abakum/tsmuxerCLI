@@ -265,7 +265,7 @@ def bdmv(s='''{
  if d: ps(s)
  try:
   p=subprocess.Popen(map(en, cmd), stdin=subprocess.PIPE)
-  p.communicate(s)
+  p.communicate(s.encode())
  except subprocess.CalledProcessError as e:
   ps("return code:", e.returncode)
   ps("return text:", e.output)
@@ -294,9 +294,7 @@ def mpls(s):
 def do():
  global f2
  f2=fe.replace(name(argv[0]), "MPLS2JSON")
- if not os.path.isfile(f2):
-  ps('Not found "%s"'%f2)
-  return
+ nf(f2)
  bdjo=1 if os.path.isfile(os.path.join(fo, "BDMV", "BDJO", "00000.bdjo")) else 0
  ps("BDJO", bdjo)
  PLAYLIST=os.path.join(fo, "BDMV", "PLAYLIST")
@@ -549,7 +547,11 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
  tr(' do - ', 'выходной каталог для demux, blu-ray или avchd.',
               'output directory for demux, blu-ray or avchd.')
  tr('      ', 'если fo.ext и do опущены, то `tsMuxeR fm.meta fo.ext|do` не будет запущен',
-            '''If `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started''')
+            '''if `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started''')
+ tr('      ', 'если fm.meta и все fiList опущены но указан do в котором есть do/BDMV/PLAYLIST/*.mpls, то do/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
+              'if `fm.meta` and all `fiList` are omitted but present `do` with `do/BDMV/PLAYLIST/*.mpls` then `do/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title')
+ tr('      ', 'MPLS2JSON.exe из BDTools https://forum.doom9.org/showthread.php?t=174563 используется для этого. Сделай ссылку на него или скопируй туда где %s'%(fe if ec else "tsMuxeR.exe"),
+              '`MPLS2JSON.exe` from BDTools https://forum.doom9.org/showthread.php?t=174563 is used for this. Make a link to it or copy to where `%s`'%(fe if ec else "tsMuxeR.exe"))
  tr(' muxOpt, ... muxOptLast - ', 'опции для первой строки fm.meta',
                                   'options to be prepened to the first line of `fm.meta`')
  tr(' fiList, ... fiListLast - ', 'список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]',
@@ -558,7 +560,7 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                                   'If instead of `fiList` specify `fil.txt` then `fiList` in UTF8 encoding will be read from `fil.txt`')
  tr('  fi, ... fiLast - ', 'это один из вариантов:',
                            'is one of the following variants:')
- tr('   file.ext - ', 'имя медиа файла который добавится к склеийке',
+ tr('   file.ext - ', 'имя медиа файла который добавится к склейке',
                       'name of the media file that is added to the gluing')
  tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls',
                        'directories in which there is `BDMV/PLAYLIST/` adds the first mpls to the gluing')
@@ -617,6 +619,12 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                                                'glues 42.ts and 43.ts into the blu-ray directory `BD`')
  tr('             ' ,'Опущенные опции SRT будут прочитаны из `%s`'%j,
                      'Omitted SRT options will be read from `%s`'%j)
+ tr(' `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` ' ,'запишет первый тайтл блюрэя в MT',
+                                               'creates the first title from 42.ts into the blu-ray directory `MT`')
+ tr(' `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` ' ,'запишет второй тайтл блюрэя в MT',
+                                               'creates the second title from 43.ts into the blu-ray directory `MT`')
+ tr(' `tsmuxer.py MT` ' ,'MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
+                         '`MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title')
  tr(' `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
                                                'creates the blu-ray directory `BD3D1` from `3D1.mkv`')
  tr(' `tsmuxer.py BD3D --blu-ray list.txt` ' ,'если в файле list.txt будет `BD3D1+BD3D2`',
@@ -775,7 +783,7 @@ od["c"]={
  "blankoffset": "blankOffset",
 }
 ac(sys.stdout)
-subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
+#subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
 argv=[de(x) for x in sys.argv]
 exe=".exe" if os.name=="nt" or sys.platform in ("msys", "win32") else ""
