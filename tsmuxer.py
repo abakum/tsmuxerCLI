@@ -610,7 +610,7 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                      'excludes the MVC track and muxes 2D AVCHD')
  if 0: tr(' `tsmuxer.py fromDemuxed.ts fromDemuxed+` ', 'найдёт в fromDemuxed/ все дорожки и сделает fromDemuxed.ts',
                                                   'will find in `fromDemuxed/` all tracks and produces `fromDemuxed.ts`')
- print(' `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320 ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`')
+ print(' `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320ms ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`')
  tr('             ', 'обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,',
                      'cuts `00042.MTS`, strips all the subtitles from it, adds SRT subtitle tracks from `00042.srt`,')
  tr('             ', 'запишет указанные SRT опции в `%s` и создаст 42.ts'%j,
