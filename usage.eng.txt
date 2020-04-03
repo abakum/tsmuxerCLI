@@ -15,7 +15,9 @@ where:
   .iso - options --blu-ray --label="fo" will be added to muxOpt
   .ts, .m2ts, .mts - options --demux --blu-ray --avchd will be removed from muxOpt
  do - output directory for demux, blu-ray or avchd.
-      If `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started
+      if `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started
+      if `fm.meta` and all `fiList` are omitted but present `do` with `do/BDMV/PLAYLIST/*.mpls` then `do/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title
+      `MPLS2JSON.exe` from BDTools https://forum.doom9.org/showthread.php?t=174563 is used for this. Make a link to it or copy to where `tsMuxeR.exe`
  muxOpt, ... muxOptLast - options to be prepened to the first line of `fm.meta`
  fiList, ... fiListLast - list of the media files to be glued. Has the following syntax: `fi+[fi2[+...+fiLast]]`
                           If instead of `fiList` specify `fil.txt` then `fiList` in UTF8 encoding will be read from `fil.txt`
@@ -52,6 +54,9 @@ ex:
              saves given the SRT options to `tsmuxer.json`, and outputs `42.ts`
  `tsmuxer.py BD --blu-ray 42.ts+43.ts` glues 42.ts and 43.ts into the blu-ray directory `BD`
              Omitted SRT options will be read from `tsmuxer.json`
+ `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` creates the first title from 42.ts into the blu-ray directory `MT`
+ `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` creates the second title from 43.ts into the blu-ray directory `MT`
+ `tsmuxer.py MT` `MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` creates the blu-ray directory `BD3D1` from `3D1.mkv`
  `tsmuxer.py BD3D --blu-ray list.txt` if in file `list.txt` is `BD3D1+BD3D2`
              then glues `BD3D1` with `BD3D2` into the blu-ray directory `BD3D`
