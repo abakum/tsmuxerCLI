@@ -33,7 +33,7 @@ where:
   V - selects the video tracks
   A - selects the audio tracks
   S - selects the subtitle tracks
-  `foo bar`, foobar - selects the tracks with the given substring
+  "foo bar", foobar - selects the tracks with the given substring
   [0-9](0-9) - selects the track by its number
   ! - inverts the track selection
   + - if present: `=selTr + =selTr2` selects `selTr` then adds to the selection the tracks that match `selTr2`.
@@ -59,6 +59,7 @@ ex:
  `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` creates the first title from 42.ts into the blu-ray directory `MT`
  `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` creates the second title from 43.ts into the blu-ray directory `MT`
  `tsmuxer.py MT` `MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title
+ `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`creates the one-title blu-ray `BD` from multi-tile blu-ray `MT`
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` creates the blu-ray directory `BD3D1` from `3D1.mkv`
  `tsmuxer.py BD3D --blu-ray list.txt` if in file `list.txt` is `BD3D1+BD3D2`
              then glues `BD3D1` with `BD3D2` into the blu-ray directory `BD3D`
