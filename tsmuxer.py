@@ -549,9 +549,9 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
  tr(' do - ', 'выходной каталог для demux, blu-ray или avchd.',
               'output directory for demux, blu-ray or avchd.')
  tr('      ', 'если fo.ext и do опущены, то `tsMuxeR fm.meta fo.ext|do` не будет запущен',
-            '''if `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started''')
- tr('      ', 'если fm.meta и все fiList опущены но указан do в котором есть do/BDMV/PLAYLIST/*.mpls, то do/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
-              'if `fm.meta` and all `fiList` are omitted but present `do` with `do/BDMV/PLAYLIST/*.mpls` then `do/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title')
+              "if `fo.ext` and `do` are omitted then `tsMuxeR fm.meta fo.ext|do` won't be started")
+ tr('      ', 'если fm.meta и все fiList опущены но указан do в котором есть do~BDMV~PLAYLIST~*.mpls, то do~BDMV~*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
+              'if `fm.meta` and all `fiList` are omitted but present `do` with `do~BDMV~PLAYLIST~*.mpls` then `do~BDMV~*.bdmv` will be adjusted so that the bluray becomes multi-title')
  tr('      ', 'MPLS2JSON.exe из BDTools https://forum.doom9.org/showthread.php?t=174563 используется для этого. Сделай ссылку на него или скопируй туда где %s'%(fe if ec else "tsMuxeR.exe"),
               '`MPLS2JSON.exe` from BDTools https://forum.doom9.org/showthread.php?t=174563 is used for this. Make a link to it or copy to where `%s`'%(fe if ec else "tsMuxeR.exe"))
  tr(' muxOpt, ... muxOptLast - ', 'опции для первой строки fm.meta',
@@ -564,10 +564,10 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                            'is one of the following variants:')
  tr('   file.ext - ', 'имя медиа файла который добавится к склейке',
                       'name of the media file that is added to the gluing')
- tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls',
-                       'directories in which there is `BDMV/PLAYLIST/` adds the first mpls to the gluing')
- tr('   directory - ', 'каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога',
-                       'a directory in which there is no `BDMV/PLAYLIST/` adds all files of directory to the gluing')
+ tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV~PLAYLIST~ добавит в склейку первый mpls',
+                       'directories in which there is `BDMV~PLAYLIST~` adds the first mpls to the gluing')
+ tr('   directory - ', 'каталог в котором нет BDMV~PLAYLIST~ добавляет в склейку все файлы каталога',
+                       'a directory in which there is no `BDMV~PLAYLIST~` adds all files of directory to the gluing')
  tr(r'   directory\pattern - ', 'для Windows',
                                 'for `Windows`')
  tr('   "directory/pattern" - ', 'для Linux',
@@ -608,14 +608,14 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                                      'creates `my.meta` from `i.mkv`')
  tr(' `tsmuxer.py my.meta . =_text =1 ! -`\n             ', 'демультиплексирует первую дорожку SRT субтитров в текущий каталог',
                                                             'demultiplexes the first SRT subtitle track into the current directory')
- tr(' `tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -`\n             ', 'создаст rus.iso с видео дорожками и дорожками для русскоязычных',
+ tr(' `tsmuxer.py rus.iso BD~BDMV~PLAYLIST~00001.mpls+ =V + =rus ! -`\n             ', 'создаст rus.iso с видео дорожками и дорожками для русскоязычных',
                                                                                        'muxes `rus.iso` from the video track and the tracks with `rus` in it')
- tr(' `tsmuxer.py AVCHD --avchd BD+ =mvc -` ', 'если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)',
-                                               'if `BD/` has `BDMV/PLAYLIST/` will find first mpls (ex `00000.mpls`)')
+ tr(' `tsmuxer.py AVCHD --avchd BD+ =mvc -` ', 'если в BD~ есть BDMV~PLAYLIST~ найдёт в нём первый mpls (например 00000.mpls)',
+                                               'if `BD~` has `BDMV~PLAYLIST~` will find first mpls (ex `00000.mpls`)')
  tr('             ', 'отбросит MVC дорожку и сделает 2D AVCHD',
                      'excludes the MVC track and muxes 2D AVCHD')
- if 0: tr(' `tsmuxer.py fromDemuxed.ts fromDemuxed+` ', 'найдёт в fromDemuxed/ все дорожки и сделает fromDemuxed.ts',
-                                                  'will find in `fromDemuxed/` all tracks and produces `fromDemuxed.ts`')
+ if 0: tr(' `tsmuxer.py fromDemuxed.ts fromDemuxed+` ', 'найдёт в fromDemuxed~ все дорожки и сделает fromDemuxed.ts',
+                                                  'will find in `fromDemuxed~` all tracks and produces `fromDemuxed.ts`')
  print(' `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320ms ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`')
  tr('             ', 'обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,',
                      'cuts `00042.MTS`, strips all the subtitles from it, adds SRT subtitle tracks from `00042.srt`,')
@@ -629,9 +629,9 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                                                'creates the first title from 42.ts into the blu-ray directory `MT`')
  tr(' `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` ' ,'запишет второй тайтл блюрэя в MT',
                                                'creates the second title from 43.ts into the blu-ray directory `MT`')
- tr(' `tsmuxer.py MT` ' ,'MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
-                         '`MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title')
- tr(' `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`' ,'создаст однотайтловый BD из мультитайтлового блюрея MT',
+ tr(' `tsmuxer.py MT` ' ,'MT~BDMV~*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
+                         '`MT~BDMV~*.bdmv` will be adjusted so that the bluray becomes multi-title')
+ tr(' `tsmuxer.py BD --blu-ray MT~BDMV~PLAYLIST+`' ,'создаст однотайтловый BD из мультитайтлового блюрея MT',
                                                     'creates the one-title blu-ray `BD` from multi-tile blu-ray `MT`')
  tr(' `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
                                                'creates the blu-ray directory `BD3D1` from `3D1.mkv`')
@@ -667,7 +667,7 @@ def f2t(s):
  return (datetime(1970, 1, 1)+timedelta(seconds=s)).strftime("%H:%M:%S.%f")[:12]
 
 def tr(comm, rus, eng):
- print(comm+(rus if ru else eng))
+ print((comm+(rus if ru else eng)).replace("~", os.sep))
 
 def dq(n, v):
  r=[od["c"].get(n, n)]
