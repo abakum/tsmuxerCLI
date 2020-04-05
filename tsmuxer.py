@@ -569,9 +569,9 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
  tr('   directory - ', 'каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога',
                        'a directory in which there is no `BDMV/PLAYLIST/` adds all files of directory to the gluing')
  tr(r'   directory\pattern - ', 'для Windows',
-                               'for `Windows`')
+                                'for `Windows`')
  tr('   "directory/pattern" - ', 'для Linux',
-                               'for `Linux`')
+                                 'for `Linux`')
  tr('              pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
                                 'wildcard pattern: ? or * add to the gluing all files matching the pattern')
  tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
@@ -584,7 +584,7 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                'selects the audio tracks')
  tr('  S - ', 'выберет дорожки субтитров',
                'selects the subtitle tracks')
- tr('  `foo bar`, foobar - ', 'выберет только те дорожки, в которых есть эта подстрока',
+ tr('  "foo bar", foobar - ', 'выберет только те дорожки, в которых есть эта подстрока',
                                'selects the tracks with the given substring')
  tr('  [0-9](0-9) - ', 'выберет дорожку с этим номером',
                         'selects the track by its number')
@@ -631,6 +631,8 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                                                'creates the second title from 43.ts into the blu-ray directory `MT`')
  tr(' `tsmuxer.py MT` ' ,'MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым',
                          '`MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title')
+ tr(' `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`' ,'создаст однотайтловый BD из мультитайтлового блюрея MT',
+                                                    'creates the one-title blu-ray `BD` from multi-tile blu-ray `MT`')
  tr(' `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
                                                'creates the blu-ray directory `BD3D1` from `3D1.mkv`')
  tr(' `tsmuxer.py BD3D --blu-ray list.txt` ' ,'если в файле list.txt будет `BD3D1+BD3D2`',
@@ -834,7 +836,7 @@ for a in argv[1:]:                                                       #parse 
    elif os.path.isdir(inp):
     PLAYLIST=os.path.join(inp, "BDMV", "PLAYLIST")
     if os.path.isdir(PLAYLIST): fil+=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
-    else: fil+=sorted(glob(inp+"/*"))
+    else: fil+=sorted(glob(inp+os.sep+"*"))
    else: fil+=[inp]
   a="+".join(fil) 
   if not mo: fi=a
