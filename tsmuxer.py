@@ -485,7 +485,9 @@ S_TEXT/UTF8, "D:\AV\2020\20200111 ДР Аллы.mkv", font-name="Arial", font-si
    if "Track ID:" in me: ll+=['track=%s'%me["Track ID:"][t]]
    if "subTrack:" in me and len(me["subTrack:"])>t: ll+=['subtrack=%s'%me["subTrack:"][t]]
    if "Stream lang:" in me and me["Stream lang:"][t]: ll+=['lang=%s'%me["Stream lang:"][t]]
-   if "/i" in tl.lower(): ll+=["contsps"]
+   if "/i" in tl.lower():
+    ll+=["insertsei"]
+    ll+=["contsps"]
    if "s"==tl.lower().lstrip("#")[0]:
     for lgd in (me, mg):
      if "Frame rate:" in lgd:
@@ -566,8 +568,12 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                        'directories in which there is `BDMV/PLAYLIST/` adds the first mpls to the gluing')
  tr('   directory - ', 'каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога',
                        'a directory in which there is no `BDMV/PLAYLIST/` adds all files of directory to the gluing')
- tr('   directory/pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
-                               'wildcard pattern: ? or * add to the gluing all files matching the pattern')
+ tr(r'   directory\pattern - ', 'для Windows',
+                               'for `Windows`')
+ tr('   "directory/pattern" - ', 'для Linux',
+                               'for `Linux`')
+ tr('              pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
+                                'wildcard pattern: ? or * add to the gluing all files matching the pattern')
  tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
                                 'list of the tracks selectors. Has the following syntax: `[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]`')
  tr(' selTr - ', 'это одна из следующих опций:',
@@ -814,7 +820,7 @@ for a in argv[1:]:                                                       #parse 
   odl[fin]+=[a]
   continue
  elif os.path.isdir(a) or ext(a) in extl or a.endswith(os.sep): fo=a
- elif "+" in a or ext(a)=="txt" or set("*?")&set(a):           #fi
+ elif set("+*?")&set(a) or ext(a)=="txt":                               #fi
   fin+=mo
   if ext(a)=="txt":
    nf(a)
