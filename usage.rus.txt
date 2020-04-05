@@ -59,6 +59,7 @@ fiListLast fiSelLast [-] [fiOptListLast]
  `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` запишет первый тайтл блюрэя в MT
  `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` запишет второй тайтл блюрэя в MT
  `tsmuxer.py MT` MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
+ `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`создаст однотайтловый BD из мультитайтлового блюрея MT
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` запишет в каталог BD3D1 блюрэй из 3D1.mkv
  `tsmuxer.py BD3D --blu-ray list.txt` если в файле list.txt будет `BD3D1+BD3D2`
              то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D
