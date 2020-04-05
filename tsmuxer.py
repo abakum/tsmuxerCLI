@@ -836,7 +836,7 @@ for a in argv[1:]:                                                       #parse 
    elif os.path.isdir(inp):
     PLAYLIST=os.path.join(inp, "BDMV", "PLAYLIST")
     if os.path.isdir(PLAYLIST): fil+=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
-    else: fil+=sorted(glob(inp+os.sep+"*"))
+    else: fil+=sorted(glob(os.path.join(inp, "*")))
    else: fil+=[inp]
   a="+".join(fil) 
   if not mo: fi=a
