@@ -16,15 +16,15 @@ fiListLast fiSelLast [-] [fiOptListLast]
   .ts, .m2ts, .mts - из muxOpt будут удалены опции --demux --blu-ray ---avchd
  do - выходной каталог для demux, blu-ray или avchd.
       если fo.ext и do опущены, то `tsMuxeR fm.meta fo.ext|do` не будет запущен
-      если fm.meta и все fiList опущены но указан do в котором есть do/BDMV/PLAYLIST/*.mpls, то do/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
+      если fm.meta и все fiList опущены но указан do в котором есть do\BDMV\PLAYLIST\*.mpls, то do\BDMV\*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
       MPLS2JSON.exe из BDTools https://forum.doom9.org/showthread.php?t=174563 используется для этого. Сделай ссылку на него или скопируй туда где tsMuxeR.exe
  muxOpt, ... muxOptLast - опции для первой строки fm.meta
  fiList, ... fiListLast - список медиафайлов которые будут склеены. Имеют вид: fi+[fi2[+ ...+fiLast]]
                           Если вместо fiList  указать fil.txt то fiList в кодировке UTF8 будет прочитан из fil.txt
   fi, ... fiLast - это один из вариантов:
    file.ext - имя медиа файла который добавится к склейке
-   BD, AVCHD - каталоги в которых есть BDMV/PLAYLIST/ добавит в склейку первый mpls
-   directory - каталог в котором нет BDMV/PLAYLIST/ добавляет в склейку все файлы каталога
+   BD, AVCHD - каталоги в которых есть BDMV\PLAYLIST\ добавит в склейку первый mpls
+   directory - каталог в котором нет BDMV\PLAYLIST\ добавляет в склейку все файлы каталога
    directory\pattern - для Windows
    "directory/pattern" - для Linux
               pattern - шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону
@@ -33,7 +33,7 @@ fiListLast fiSelLast [-] [fiOptListLast]
   V - выберет видео дорожки
   A - выберет звуковые дорожки
   S - выберет дорожки субтитров
-  `foo bar`, foobar - выберет только те дорожки, в которых есть эта подстрока
+  "foo bar", foobar - выберет только те дорожки, в которых есть эта подстрока
   [0-9](0-9) - выберет дорожку с этим номером
   ! - инвертирует список выбранных дорожек
   + - Если задан: `=selTr + =selTr2` то добавит в список дорожек выбранных selTr дорожки которые соответствуют условию selTr2.
@@ -47,9 +47,9 @@ fiListLast fiSelLast [-] [fiOptListLast]
  `tsmuxer.py my.meta i.mkv+` создаст только my.meta из i.mkv
  `tsmuxer.py my.meta . =_text =1 ! -`
              демультиплексирует первую дорожку SRT субтитров в текущий каталог
- `tsmuxer.py rus.iso BD/BDMV/PLAYLIST/00001.mpls+ =V + =rus ! -`
+ `tsmuxer.py rus.iso BD\BDMV\PLAYLIST\00001.mpls+ =V + =rus ! -`
              создаст rus.iso с видео дорожками и дорожками для русскоязычных
- `tsmuxer.py AVCHD --avchd BD+ =mvc -` если в BD/ есть BDMV/PLAYLIST/ найдёт в нём первый mpls (например 00000.mpls)
+ `tsmuxer.py AVCHD --avchd BD+ =mvc -` если в BD\ есть BDMV\PLAYLIST\ найдёт в нём первый mpls (например 00000.mpls)
              отбросит MVC дорожку и сделает 2D AVCHD
  `tsmuxer.py 42.ts --cut-start=28320ms --cut-end=184320ms 00042.MTS+ =S - 00042.srt+ ,timeshift=28320ms ,lang=rus ,font-name="Impact" ,font-size=65 ,font-color=0xffffffff ,bottom-offset=24 ,font-border=5 ,fadein-time=0.25 ,fadeout-time=1 ,text-align=center ,lang=rus`
              обрежет 00042.MTS, отбросит его субтитры, добавит субтитры из 00042.srt,
@@ -58,8 +58,8 @@ fiListLast fiSelLast [-] [fiOptListLast]
              Опущенные опции SRT будут прочитаны из `tsmuxer.json`
  `tsmuxer.py MT --blu-ray 42.ts+ --mplsOffset=1 --m2tsOffset=10` запишет первый тайтл блюрэя в MT
  `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` запишет второй тайтл блюрэя в MT
- `tsmuxer.py MT` MT/BDMV/*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
- `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`создаст однотайтловый BD из мультитайтлового блюрея MT
+ `tsmuxer.py MT` MT\BDMV\*.bdmv будут откорректированы чтоб блюрей стал мультитайтловым
+ `tsmuxer.py BD --blu-ray MT\BDMV\PLAYLIST+`создаст однотайтловый BD из мультитайтлового блюрея MT
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` запишет в каталог BD3D1 блюрэй из 3D1.mkv
  `tsmuxer.py BD3D --blu-ray list.txt` если в файле list.txt будет `BD3D1+BD3D2`
              то склеит BD3D1 с BD3D2 и запишет блюрэй BD3D
