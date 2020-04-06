@@ -4,8 +4,8 @@ Helper for tsMuxeR - not GUI but CLI
 - Roman Vasilenko - for creating tsMuxeR 
 - [justdan96](https://github.com/justdan96/tsMuxer) - for today's development tsMuxer
 ## Usage
-- Look [usage](https://github.com/abakum/tsmuxerCLI/blob/master/usage.eng.txt)
-- Смотри [использование](https://github.com/abakum/tsmuxerCLI/blob/master/usage.rus.txt)
+- Look [usage](https://github.com/abakum/tsmuxerCLI/blob/master/usage.eng.txt) for Linux
+- Смотри [использование](https://github.com/abakum/tsmuxerCLI/blob/master/usage.rus.txt) для Windows
 
 ### ex:
 
