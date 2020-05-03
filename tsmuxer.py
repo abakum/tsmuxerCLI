@@ -7,12 +7,12 @@ Helper for tsMuxeR - not GUI but CLI
 from __future__ import print_function, division, unicode_literals
 d=0 #debug
 __metaclass__ = type
-import locale, codecs, os, sys
-u8="utf-8"
-acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
-ru=locale.getlocale()[0] in ("Russian_Russia", "ru_RU")
 def ac(eio):
+ import sys, locale, os, codecs
+ global py3, u8, acp, de, en
  py3=sys.version_info.major>2
+ u8="utf-8"
+ acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
  global de, en
  de, en =(lambda s : s,
           lambda s : s) if py3 else (
@@ -26,15 +26,14 @@ def ac(eio):
                                                           eio))
  ps(eio, "encoding='%s'"%eio.encoding, acp)
 
-import subprocess, inspect, json
+import sys, os, locale, subprocess, inspect, json, bdon
 from glob import glob
 from tempfile import NamedTemporaryFile
 from datetime import datetime, timedelta
-if sys.version_info < (3, 6): from collections import OrderedDict
-else: OrderedDict = dict
+
 shell="SHELL" in os.environ
 
-def bdmv(s='''{
+def bdmv_(s='''{
  "MOBJ": {
   "version_number": "0200",
   "reserved_header": [
@@ -258,14 +257,18 @@ def bdmv(s='''{
   ]
  }
 }''', mo=1):
- fb=("MovieObject" if mo else "index")+".bdmv"
+ fb="index"
+ if mo:
+  fb="MovieObject"
+  s=json.dumps(makeMO())
+ fb+=".bdmv"
  sour=os.path.join(fo, "BDMV", fb)
  cmd=[f2, "-reverse", "-", sour]
  ps(cmd)
  if d: ps(s)
  try:
   p=subprocess.Popen(map(en, cmd), stdin=subprocess.PIPE)
-  p.communicate(s.encode())
+  p.communicate(s.encode("ascii"))
  except subprocess.CalledProcessError as e:
   ps("return code:", e.returncode)
   ps("return text:", e.output)
@@ -280,7 +283,7 @@ def bdmv(s='''{
   except IOError as e: ps(str(e))
  return p.returncode
  
-def mpls(s):
+def mplsBDT(s):
  cmd=[f2, s]
  ps(cmd)
  bu=b""
@@ -291,122 +294,202 @@ def mpls(s):
  if d: ps(r)
  return r
 
+def makeMO():
+ jmo={"MOBJ": {
+ "version_number": "0200",
+ "reserved_header": [0],
+ "MovieObjects":[],
+ }
+}
+ jm=jmo["MOBJ"]["MovieObjects"]
+ #0 FirstPlayback for not java
+ jm+=[{
+ "resume_intention_flag": 0,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "Move reg_4 2"
+}, {
+  "command": "Jump_Title 1"
+}]}]
+ #1 TopMenu for java
+ jm+=[{
+ "resume_intention_flag": 0,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "Nop"
+}]}]
+ #2 Title for 2D
+ jm+=[{
+ "resume_intention_flag": 1,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "SetOutputMode 0"
+}, {
+  "command": "Move reg_4 psr_4"
+}, {
+  "command": "Add reg_4 1"
+}, {
+  "command": "Play_PL psr_4"
+}, {
+  "command": "Jump_Title reg_4"
+}]}]
+ #3 LastTitle for 2D
+ jm+=[{
+ "resume_intention_flag": 1,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "SetOutputMode 0"
+}, {
+  "command": "Move reg_4 1"
+}, {
+  "command": "Play_PL psr_4"
+}, {
+  "command": "Jump_Title reg_4"
+}]}]
+ #4 TopMenu for not java
+ jm+=[{
+ "resume_intention_flag": 1,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "Jump_Title reg_4"
+}]}]
+ #5 Title for 3D
+ jm+=[{
+ "resume_intention_flag": 1,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "SetOutputMode 1"
+}, {
+  "command": "Move reg_4 psr_4"
+}, {
+  "command": "Add reg_4 1"
+}, {
+  "command": "Play_PL psr_4"
+}, {
+  "command": "Jump_Title reg_4"
+}]}]
+ #6 LastTitle for 3D
+ jm+=[{
+ "resume_intention_flag": 1,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "SetOutputMode 1"
+}, {
+  "command": "Move reg_4 1"
+}, {
+  "command": "Play_PL psr_4"
+}, {
+  "command": "Jump_Title reg_4"
+}]}]
+ #7 FirstPlayback for java
+ jm+=[{
+ "resume_intention_flag": 0,
+ "menu_call_mask": 0, "title_search_mask": 0, "reserved01": 0,
+ "NavigationCommand": [{
+  "command": "SetOutputMode 1"
+}, {
+  "command": "Move reg_4 2"
+}, {
+  "command": "Jump_Title 1"
+}]}]
+ return jmo
+
 def do():
- global f2
- f2=fe.replace(name(argv[0]), "MPLS2JSON")
- nf(f2)
- bdjo=1 if os.path.isfile(os.path.join(fo, "BDMV", "BDJO", "00000.bdjo")) else 0
- ps("BDJO", bdjo)
- PLAYLIST=os.path.join(fo, "BDMV", "PLAYLIST")
- if not os.path.isdir(PLAYLIST): return                                          
- pl=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))
- lenpl=len(pl)
- if not lenpl: return
- if bdmv(): return
+ bd=bdon.BD(fo)
+ if not bd.ver: return
+ if 0:
+  global f2
+  f2=fe.replace(name(argv[0]), "MPLS2JSON")
+  nf(f2)
+  PLAYLIST=os.path.join(fo, "BDMV", "PLAYLIST")
+  if not os.path.isdir(PLAYLIST): return                                          
+  pl=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))
+  lenpl=len(pl)
+  if not lenpl: return
+ lenpl=bd.read("*.mpl*")
+ #ps(json.dumps(makeMO(), sort_keys=True, indent=4))
+ if 1:
+  bd.read("*.bdm*")
+  #ps(json.dumps(bd.mov.json, indent=4))
+  bd.mov.write(makeMO())
+ else:
+  mo=bdon.MOBJ(fo)
+  #ps(json.dumps(mo.read(), indent=4))
+  mo.write(makeMO())
  matrix='''
 2D             object_type playback_type mobj_id_ref bdjo_file_name
 FirstPlayback  1           0             0           x
 TopMenu        1           1             4           x
-TitleLast      1           0             3           x
 Title          1           0             2           x
+TitleLast      1           0             3           x
 
 3D             object_type playback_type mobj_id_ref bdjo_file_name
 FirstPlayback  1           0             0           x
 TopMenu        1           1             4           x
-TitleLast      1           0             6           x
 Title          1           0             5           x
+TitleLast      1           0             6           x
 
 2Djava         object_type playback_type mobj_id_ref bdjo_file_name
 FirstPlayback  1           0             7           x
 TopMenu        1           1             1           x
-TitleFirst     2           0             x           00000
-TitleLast      1           0             3           x
+TitleFirst     2           2             x           00000
 Title          1           0             2           x
+TitleLast      1           0             3           x
 
 3Djava         object_type playback_type mobj_id_ref bdjo_file_name
 FirstPlayback  1           0             7           x
 TopMenu        1           1             1           x
-TitleFirst     2           0             x           00000
-TitleLast      1           0             6           x
+TitleFirst     2           2             x           00000
 Title          1           0             5           x
-'''
- bdj='''{
-     "object_type": 2,
-     "access_type": 0,
-     "reserved01": 0,
-     "playback_type": 0,
-     "reserved02": 0,
-     "bdjo_file_name": "00000",
-     "reserved03": 0
-    }'''
- bdt='''{
-     "object_type": 1,
-     "access_type": 0,
-     "reserved01": 0,
-     "playback_type": 0,
-     "reserved02": 0,
-     "mobj_id_ref": %s,
-     "reserved03": 0
-    }'''
- cpud=str(list(map(ord, (os.path.basename(argv[0])+ "\0"*32)[:32])))
- indx='''{
- "INDX": {
-  "version_number": "0200",
-  "reserved_header": [
-   0
-  ],
-  "AppInfoBDMV": {
-   "reserved01": 0,
-   "initial_output_mode_preference": %s,
-   "SS_content_exist_flag": %s,
-   "reserved02": 0,
-   "video_format": "0",
-   "frame_rate": "0",
-   "content_provider_user_data": %s
-  },
-  "Indexes": {
-   "FirstPlayback": {
-    "object_type": 1,
-    "access_type": 0,
-    "reserved01": 0,
-    "playback_type": 0,
-    "reserved02": 0,
-    "mobj_id_ref": %s,
-    "reserved03": 0
-   },
-   "TopMenu": {
-    "object_type": 1,
-    "access_type": 0,
-    "reserved01": 0,
-    "playback_type": 1,
-    "reserved02": 0,
-    "mobj_id_ref": %s,
-    "reserved03": 0
-   },
-   "Title": [
-    %s
-   ]
-  }
- }
-}
+TitleLast      1           0             6           x
 '''
  tl=[]
- SS_content_exist_flag=0
- initial_output_mode_preference=0
- for ti, p in enumerate(pl):
-  SS_content=3 if "ExtensionData" in json.loads(mpls(p))["MPLS"] else 0
-  if SS_content:
-   ps("3D", SS_content)
-   SS_content_exist_flag=1
-   if not ti: initial_output_mode_preference=1
-  tl+=[bdt%((2 if ti<lenpl-1 else 3)+SS_content)]
- if bdjo: tl[0]=bdj
- bdmv(indx%(initial_output_mode_preference,
-            SS_content_exist_flag,
-            cpud,
-            7*SS_content_exist_flag*bdjo,
-            1 if bdjo else 4,
-            ",".join(tl)), 0)
+ for ti, mpl in enumerate(bd.mpl):
+  tl+=[od({
+ "object_type": bdon.indx_object_type_hdmv,
+ "access_type": 0, "reserved01": 0,
+ "playback_type": bdon.indx_hdmv_playback_type_movie, "reserved02": 0,
+ "mobj_id_ref": (2 if ti<lenpl-1 else 3)+mpl.SS_content, "reserved03": 0
+})]
+ bdjo=bd.read("*.bdjo")>0
+ if bdjo:
+  tl[0]=od({
+ "object_type": bdon.indx_object_type_bdj, "access_type": 0, "reserved01": 0,
+ "playback_type": bdon.indx_bdj_playback_type_movie, "reserved02": 0,
+ "bdjo_file_name": name(bd.select("*.bdjo")[0]), "reserved03": 0,
+})
+ jn=od({
+ "INDX": od({
+  "version_number": "0300" if bd.is4K or bd.isV3 else "0200", "reserved_header": [0],
+  "AppInfoBDMV": od({"reserved01": 0,
+   "initial_output_mode_preference": bd.initial_output_mode_preference,
+   "SS_content_exist_flag": bd.SS_content_exist_flag, "reserved02": 0,
+   "video_format": "0", "frame_rate": "0",
+   "content_provider_user_data": list(map(ord, (os.path.basename(argv[0])+"\0"*32)[:32])),
+  }),
+  "Indexes": od({
+   "FirstPlayback": od({
+    "object_type": bdon.indx_object_type_hdmv, "access_type": 0, "reserved01": 0,
+    "playback_type": bdon.indx_hdmv_playback_type_movie, "reserved02": 0,
+    "mobj_id_ref": 7*bd.SS_content_exist_flag*bdjo, "reserved03": 0,
+   }),
+   "TopMenu": od({
+    "object_type": bdon.indx_object_type_hdmv, "access_type": 0, "reserved01": 0,
+    "playback_type": bdon.indx_hdmv_playback_type_interactive, "reserved02": 0,
+    "mobj_id_ref": 1 if bdjo else 4, "reserved03": 0,
+   }),
+   "Title": tl
+  })
+ })
+})
+ if bd.uhd!=1: jn["INDX"]["ExtensionData"]=[bd.UHD]
+ if 0: ps(jn)
+ else:
+  #ps(json.dumps(bd.bd["index.bdmv"].json, sort_keys=True, indent=4))
+  ps(json.dumps(jn, sort_keys=0, indent=4))
+  bd.ind.write(jn)
+  ps(json.dumps(bd.ind.read(), sort_keys=0, indent=4))
+  
 
 def tsMuxeR(*arg):
  if len(arg)>1:
@@ -568,12 +651,8 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                        'directories in which there is `BDMV~PLAYLIST~` adds the first mpls to the gluing')
  tr('   directory - ', 'каталог в котором нет BDMV~PLAYLIST~ добавляет в склейку все файлы каталога',
                        'a directory in which there is no `BDMV~PLAYLIST~` adds all files of directory to the gluing')
- tr(r'   directory\pattern - ', 'для Windows',
-                                'for `Windows`')
- tr('   "directory/pattern" - ', 'для Linux',
-                                 'for `Linux`')
- tr('              pattern - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
-                                'wildcard pattern: ? or * add to the gluing all files matching the pattern')
+ tr('   "directory~pattern" - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
+                                 'wildcard pattern: ? or * add to the gluing all files matching the pattern')
  tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
                                 'list of the tracks selectors. Has the following syntax: `[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]`')
  tr(' selTr - ', 'это одна из следующих опций:',
@@ -679,7 +758,6 @@ def dq(n, v):
  return "=".join(r)
  
 if __name__!="__main__": exit()#---------------------------------------------------------------------------
-fme=u8
 MO={
  "demux",
  "blu-ray",
@@ -704,6 +782,7 @@ MS={
 M=MO|MB|MC|MS|{
  "pcr-on-video-pid",
  "new-audio-pes",
+ "hdmv-descriptors",
  "vbv-len",
  "no-asyncio",
  "cut-start",
@@ -790,7 +869,13 @@ od["c"]={
  "insertblankpl": "insertBlankPL",
  "blankoffset": "blankOffset",
 }
+
 ac(sys.stdout)
+fme=u8
+ru=locale.getlocale()[0] in ("Russian_Russia", "ru_RU")
+if sys.version_info<(3, 6): from collections import OrderedDict as od
+else: od = dict
+
 #subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
 argv=[de(x) for x in sys.argv]
@@ -881,7 +966,7 @@ for t, tl in enumerate(meta):                                       #parse meta
  mt[x0].append(t)
  if x0=="V" and "/ISO" in xl: mt["v"].append(t)
  if x0=="S" and "/UTF" in xl: mt["s"].append(t)
- md.append(OrderedDict())
+ md.append(od())
  ms.append(set())
  for j, y in enumerate(ml[t]):
   y=y.strip()
