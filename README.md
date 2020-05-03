@@ -3,6 +3,8 @@ Helper for tsMuxeR - not GUI but CLI
 ## Credits
 - Roman Vasilenko - for creating tsMuxeR 
 - [justdan96](https://github.com/justdan96/tsMuxer) - for today's development tsMuxer
+- [videofan3d](https://sites.google.com/site/videofan3d) - for BDtools
+- [libbluray](https://code.videolan.org/videolan/libbluray.git) - for open source
 ## Usage
 - Look [usage](https://github.com/abakum/tsmuxerCLI/blob/master/usage.eng.txt) for Linux
 - Смотри [использование](https://github.com/abakum/tsmuxerCLI/blob/master/usage.rus.txt) для Windows
