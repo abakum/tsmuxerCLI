@@ -296,6 +296,13 @@ def propl(self, OBJE, pattern):
   k=bdk(OBJE, self.ver)
   self.bd[k]=globals()[OBJE](self.path, ver=self.ver)
   return [self.bd[k]]
+  
+def bdglob(path, pattern):
+ r=[]
+ for b, d, f in os.walk(path): #glob(os.path.join(path, "**", pattern), recursive=True)
+  if "BACKUP" in b.upper(): continue
+  r.extend(os.path.join(b, x) for x in fnmatch.filter(f, pattern))
+ return sorted(r)
  
 class BD(object):
  def __init__(self, path="."):
@@ -389,11 +396,7 @@ class BD(object):
  
  def read(self, pattern="*.*"):
   count=0
-  g=[]
-  for r, d, f in os.walk(self.path): #glob(os.path.join(self.path, "**", pattern), recursive=True)
-   if "BACKUP" in r.upper(): continue
-   g.extend(os.path.join(r, x) for x in fnmatch.filter(f, pattern))
-  for p in sorted(g):
+  for p in bdglob(self.path, pattern):
    k=basename(p)
    obj=bdfe.get(ext(p)) or bdfe.get(k)
    if obj:
