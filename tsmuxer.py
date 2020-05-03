@@ -647,12 +647,14 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                            'is one of the following variants:')
  tr('   file.ext - ', 'имя медиа файла который добавится к склейке',
                       'name of the media file that is added to the gluing')
- tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV~PLAYLIST~ добавит в склейку первый mpls',
-                       'directories in which there is `BDMV~PLAYLIST~` adds the first mpls to the gluing')
+ tr('   BD, AVCHD - ', 'каталоги в которых есть BDMV~PLAYLIST~ добавит в склейку первый файл',
+                       'directories in which there is `BDMV~PLAYLIST~` adds the first file to the gluing')
  tr('   directory - ', 'каталог в котором нет BDMV~PLAYLIST~ добавляет в склейку все файлы каталога',
                        'a directory in which there is no `BDMV~PLAYLIST~` adds all files of directory to the gluing')
- tr('   "directory~pattern" - ', 'шаблон с подстановочными символами: ? или * добавит в склейку все файлы удовлетворяющие шаблону',
-                                 'wildcard pattern: ? or * add to the gluing all files matching the pattern')
+ tr('   "directory~pattern" - ', 'шаблон pattern с подстановочными символами: ? или * добавит в склейку все файлы в directory удовлетворяющие шаблону',
+                                 'wildcard pattern: ? or * add to the gluing all files in `directory` matching the `pattern`')
+ tr('  "directory**pattern" - ', 'рекурсивно добавит в склейку все файлы в directory удовлетворяющие шаблону *pattern',
+                                 'recursively add to the gluing all the files in the `directory` matching the `*pattern`')
  tr(' fiSel, ... fiSelLast - ', 'список селекторов дорожек. Имеют вид: [=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]',
                                 'list of the tracks selectors. Has the following syntax: `[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]`')
  tr(' selTr - ', 'это одна из следующих опций:',
@@ -712,6 +714,8 @@ fiListLast fiSelLast [-] [fiOptListLast]'''%(argv[0] if ec else "tsmuxer.py", ex
                          '`MT~BDMV~*.bdmv` will be adjusted so that the bluray becomes multi-title')
  tr(' `tsmuxer.py BD --blu-ray MT~BDMV~PLAYLIST+`' ,'создаст однотайтловый BD из мультитайтлового блюрея MT',
                                                     'creates the one-title blu-ray `BD` from multi-tile blu-ray `MT`')
+ tr(' `tsmuxer.py AVCHD --avchd MT**.*ts+`' ,'создаст однотайтловый AVCHD из мультитайтлового блюрэя MT',
+                                             'creates the one-title AVCHD `AVCHD` from multi-tile blu-ray `MT`')
  tr(' `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` ' ,'запишет в каталог BD3D1 блюрэй из 3D1.mkv',
                                                'creates the blu-ray directory `BD3D1` from `3D1.mkv`')
  tr(' `tsmuxer.py BD3D --blu-ray list.txt` ' ,'если в файле list.txt будет `BD3D1+BD3D2`',
@@ -749,9 +753,9 @@ def tr(comm, rus, eng):
  print((comm+(rus if ru else eng)).replace("~", os.sep))
 
 def dq(n, v):
- r=[od["c"].get(n, n)]
+ r=[di["c"].get(n, n)]
  if v:
-  if n in od["q"] and v.strip('"')==v: v='"%s"'%v
+  if n in di["q"] and v.strip('"')==v: v='"%s"'%v
   elif n.startswith("cut") and not set("ms")&set(v): v="%ims"%(t2f(v)*1000)
   elif n.startswith("time") and set(":.,")&set(v): v="%i"%(t2f(v)*1000)
   r+=[v]
@@ -800,8 +804,8 @@ VAS={
  "track",
  "lang",
 }
-od={}
-od["v"]={
+di={}
+di["v"]={
  "level",
  "insertsei",
  "forcesei",
@@ -814,26 +818,26 @@ od["v"]={
  "pipscale",
  "piplumma",
 }
-od["V"]=VAS|od["v"]|{
+di["V"]=VAS|di["v"]|{
  "fps",
  "delpulldown",
  "ar",
 }
-od["A"]=VAS|{
+di["A"]=VAS|{
  "timeshift",
  "down-to-dts",
  "down-to-ac3",
  "secondary",
  "default",
 }
-od["S"]=VAS|{
+di["S"]=VAS|{
  "timeshift",
  "fps",
  "3d-plane",
  "video-width",
  "video-height",
 }
-od["srt"]={
+di["srt"]={
  "font-name",
  "font-color",
  "font-size",
@@ -848,12 +852,12 @@ od["srt"]={
  "line-spacing",
  "default",
 }
-od["s"]=od["S"]|od["srt"]
-od["q"]={
+di["s"]=di["S"]|di["srt"]
+di["q"]={
  "font-name",
  "label",
 }
-od["c"]={
+di["c"]={
  "delpulldown": "delPulldown",
  "insertsei": "insertSEI",
  "forcesei": "forceSEI",
@@ -917,10 +921,12 @@ for a in argv[1:]:                                                       #parse 
   a=a.strip("+")
   fil=[]
   for inp in a.split("+"):
-   if set("*?")&set(inp): fil+=sorted(glob(inp))
+   if set("*?")&set(inp):
+    recur=inp.split("**")
+    fil+=bdon.bdglob(recur[0], "*"+recur[1]) if len(recur)>1 else sorted(glob(inp))
    elif os.path.isdir(inp):
     PLAYLIST=os.path.join(inp, "BDMV", "PLAYLIST")
-    if os.path.isdir(PLAYLIST): fil+=sorted(glob(PLAYLIST+"/[0-9][0-9][0-9][0-9][0-9].mpls"))[:1]
+    if os.path.isdir(PLAYLIST): fil+=sorted(glob(PLAYLIST+"/*.mp*"))[:1]
     else: fil+=sorted(glob(os.path.join(inp, "*")))
    else: fil+=[inp]
   a="+".join(fil) 
@@ -1023,7 +1029,7 @@ for fin in odl:
   if p0 in MC: ms[0]-=MS
   if p0 in M: rep(p, a)
   for tt in "VvASs":
-   if p0 in od[tt]:
+   if p0 in di[tt]:
     for t in mt[tt]: rep(p, a, t)
 if "bitrate" in ms[0]: rep("cbr")
 else:
@@ -1039,7 +1045,7 @@ if os.path.isfile(fj):
  except: ps('Error read SRT options from "%s"'%fj)
 dump=load.copy()
 for t in mt["s"]:                       
- for k in (od["srt"]|{"lang"})&ms[t]:   # from opt to file
+ for k in (di["srt"]|{"lang"})&ms[t]:   # from opt to file
   if md[t][k]: dump[k]=md[t][k]
  for k in set(load.keys())-ms[t]:       # from file to opt
   md[t][k]=load[k]
