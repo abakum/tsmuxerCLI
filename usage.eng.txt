@@ -23,9 +23,10 @@ where:
                           If instead of `fiList` specify `fil.txt` then `fiList` in UTF8 encoding will be read from `fil.txt`
   fi, ... fiLast - is one of the following variants:
    file.ext - name of the media file that is added to the gluing
-   BD, AVCHD - directories in which there is `BDMV/PLAYLIST/` adds the first mpls to the gluing
+   BD, AVCHD - directories in which there is `BDMV/PLAYLIST/` adds the first file to the gluing
    directory - a directory in which there is no `BDMV/PLAYLIST/` adds all files of directory to the gluing
-   "directory/pattern" - wildcard pattern: ? or * add to the gluing all files matching the pattern
+   "directory/pattern" - wildcard pattern: ? or * add to the gluing all files in `directory` matching the `pattern`
+  "directory**pattern" - recursively add to the gluing all the files in the `directory` matching the `*pattern`
  fiSel, ... fiSelLast - list of the tracks selectors. Has the following syntax: `[=selTr] [!] [+] [=selTr2] ... [!] [+] [=selTrLast] [=]`
  selTr - is one of the following options:
   V - selects the video tracks
@@ -58,6 +59,7 @@ ex:
  `tsmuxer.py MT --blu-ray 43.ts+ --mplsOffset=2 --m2tsOffset=20` creates the second title from 43.ts into the blu-ray directory `MT`
  `tsmuxer.py MT` `MT/BDMV/*.bdmv` will be adjusted so that the bluray becomes multi-title
  `tsmuxer.py BD --blu-ray MT/BDMV/PLAYLIST+`creates the one-title blu-ray `BD` from multi-tile blu-ray `MT`
+ `tsmuxer.py AVCHD --avchd MT**.*ts+`creates the one-title AVCHD `AVCHD` from multi-tile blu-ray `MT`
  `tsmuxer.py BD3D1 --blu-ray 3D1.mkv+` creates the blu-ray directory `BD3D1` from `3D1.mkv`
  `tsmuxer.py BD3D --blu-ray list.txt` if in file `list.txt` is `BD3D1+BD3D2`
              then glues `BD3D1` with `BD3D2` into the blu-ray directory `BD3D`
