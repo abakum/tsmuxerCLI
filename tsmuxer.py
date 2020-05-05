@@ -412,6 +412,7 @@ def do():
   bd.read("*.bdm*")
   #ps(json.dumps(bd.mov.json, indent=4))
   bd.mov.write(makeMO())
+  ps(json.dumps(bd.mov.read(), indent=4))
  else:
   mo=bdon.MOBJ(fo)
   #ps(json.dumps(mo.read(), indent=4))
@@ -445,51 +446,50 @@ TitleLast      1           0             6           x
 '''
  tl=[]
  for ti, mpl in enumerate(bd.mpl):
-  tl+=[od({
+  tl+=[{
  "object_type": bdon.indx_object_type_hdmv,
  "access_type": 0, "reserved01": 0,
  "playback_type": bdon.indx_hdmv_playback_type_movie, "reserved02": 0,
  "mobj_id_ref": (2 if ti<lenpl-1 else 3)+mpl.SS_content, "reserved03": 0
-})]
+}]
  bdjo=bd.read("*.bdjo")>0
  if bdjo:
-  tl[0]=od({
+  tl[0]={
  "object_type": bdon.indx_object_type_bdj, "access_type": 0, "reserved01": 0,
  "playback_type": bdon.indx_bdj_playback_type_movie, "reserved02": 0,
  "bdjo_file_name": name(bd.select("*.bdjo")[0]), "reserved03": 0,
-})
- jn=od({
- "INDX": od({
+}
+ jn={
+ "INDX": {
   "version_number": "0300" if bd.is4K or bd.isV3 else "0200", "reserved_header": [0],
-  "AppInfoBDMV": od({"reserved01": 0,
+  "AppInfoBDMV": {"reserved01": 0,
    "initial_output_mode_preference": bd.initial_output_mode_preference,
    "SS_content_exist_flag": bd.SS_content_exist_flag, "reserved02": 0,
    "video_format": "0", "frame_rate": "0",
    "content_provider_user_data": list(map(ord, (os.path.basename(argv[0])+"\0"*32)[:32])),
-  }),
-  "Indexes": od({
-   "FirstPlayback": od({
+  },
+  "Indexes": {
+   "FirstPlayback": {
     "object_type": bdon.indx_object_type_hdmv, "access_type": 0, "reserved01": 0,
     "playback_type": bdon.indx_hdmv_playback_type_movie, "reserved02": 0,
     "mobj_id_ref": 7*bd.SS_content_exist_flag*bdjo, "reserved03": 0,
-   }),
-   "TopMenu": od({
+   },
+   "TopMenu": {
     "object_type": bdon.indx_object_type_hdmv, "access_type": 0, "reserved01": 0,
     "playback_type": bdon.indx_hdmv_playback_type_interactive, "reserved02": 0,
     "mobj_id_ref": 1 if bdjo else 4, "reserved03": 0,
-   }),
+   },
    "Title": tl
-  })
- })
-})
+  }
+ }
+}
  if bd.uhd!=1: jn["INDX"]["ExtensionData"]=[bd.UHD]
  if 0: ps(jn)
  else:
   #ps(json.dumps(bd.bd["index.bdmv"].json, sort_keys=True, indent=4))
-  ps(json.dumps(jn, sort_keys=0, indent=4))
+  #ps(json.dumps(jn, sort_keys=0, indent=4))
   bd.ind.write(jn)
-  ps(json.dumps(bd.ind.read(), sort_keys=0, indent=4))
-  
+  #ps(json.dumps(bd.ind.read(), sort_keys=0, indent=4))
 
 def tsMuxeR(*arg):
  if len(arg)>1:
@@ -877,8 +877,8 @@ di["c"]={
 ac(sys.stdout)
 fme=u8
 ru=locale.getlocale()[0] in ("Russian_Russia", "ru_RU")
-if sys.version_info<(3, 6): from collections import OrderedDict as od
-else: od = dict
+if sys.version_info<(3, 6): from collections import OrderedDict
+else: OrderedDict = dict
 
 #subprocess.call(map(en, ["clear" if shell else "cls"]), shell=True)
 print("Пайтон %s.%s"%(sys.version_info.major, sys.version_info.minor), sys.executable, locale.getlocale())
@@ -972,7 +972,7 @@ for t, tl in enumerate(meta):                                       #parse meta
  mt[x0].append(t)
  if x0=="V" and "/ISO" in xl: mt["v"].append(t)
  if x0=="S" and "/UTF" in xl: mt["s"].append(t)
- md.append(od())
+ md.append(OrderedDict())
  ms.append(set())
  for j, y in enumerate(ml[t]):
   y=y.strip()
