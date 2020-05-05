@@ -10,8 +10,6 @@ Thanks to https://sites.google.com/site/videofan3d and https://code.videolan.org
 from __future__ import print_function, division, unicode_literals
 __metaclass__ = type
 import sys, os, locale, struct, fnmatch, inspect, json, subprocess
-if sys.version_info<(3, 6): from collections import OrderedDict as od
-else: od = dict
 py3=sys.version_info.major>2
 u8="utf-8"
 acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
@@ -172,7 +170,7 @@ bdfe={
  "cli": "HDMV",
 }
 def UHD(D4, hdr_flags, dic):
- if dic: return od({'ID1': 3, 'ID2': 1, 'data_block': [0, 0, 0, 8, D4, 0, hdr_flags, 0, 0, 0, 0, 0]})
+ if dic: return {'ID1': 3, 'ID2': 1, 'data_block': [0, 0, 0, 8, D4, 0, hdr_flags, 0, 0, 0, 0, 0]}
  disk_type, unk0, exist_4k_flag=StruBi(D4).unpack("4 3 1")
  hdr=StruBi(hdr_flags)
  unk2=hdr.unpack(3)
@@ -420,7 +418,7 @@ class BDMV(object):
  def __init__(self, path=".", json={}):
   self.SIG=self.__class__.__name__
   self.ver=0
-  self.json=od(json)
+  self.json=json
   me=sys.modules[self.__module__]
   mpls2json=os.path.join(os.path.dirname(os.path.abspath(me.__file__ if hasattr(me, "__file__") else sys.argv[0])), "mpls2json.exe")
   self.mpls2json=mpls2json if os.path.isfile(mpls2json) else ""
@@ -436,7 +434,7 @@ class BDMV(object):
   
  def write(self, json={}, BDTools=0):
   "Pack self.bin from json or self.json  then write to files of BD"
-  if json: self.json=od(json)
+  if json: self.json=json
   self.tobin(self.json, BDTools=BDTools)
   if self.bin:
    for f in self.file:
@@ -517,7 +515,7 @@ class INDX(BDMV):
   BDMV.__init__(self, fe(self.fn, path), json)
   
  def tobin(self, json={}, BDTools=0):
-  if json: self.json=od(json)
+  if json: self.json=json
   if BDTools:
    self.bin=BDMV.tobin(self)
    return self.bin
@@ -578,7 +576,7 @@ class INDX(BDMV):
   if BDTools:
    self.json=BDMV.tojson(self)
    return self.json
-  self.json=od({self.SIG: {}})
+  self.json={self.SIG: {}}
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
   version_number, index_start, extension_data_start=bu.unpack("> 4s 2I")
@@ -588,11 +586,11 @@ class INDX(BDMV):
   app_info_len, SS, VF=bu.unpack("> I 2B")
   SS=StruBi(SS)
   VF=StruBi(VF)
-  self.json=od({
- self.SIG: od({
+  self.json={
+ self.SIG: {
   "version_number": ascii(version_number),
   "reserved_header": [0],
-  "AppInfoBDMV": od({
+  "AppInfoBDMV": {
    "reserved01": SS.unpack(1),
    "initial_output_mode_preference": SS.unpack(1),
    "SS_content_exist_flag": SS.unpack(1),
@@ -600,14 +598,14 @@ class INDX(BDMV):
    "video_format": video_format.get(VF.unpack(4), "0"),
    "frame_rate": frame_rate.get(VF.unpack(4), "0"),
    "content_provider_user_data": bu.unpack(-(app_info_len-struct.calcsize("I 2B"))),
-  }),
-  "Indexes":od({
-   "FirstPlayback": od({}),
-   "TopMenu": od({}),
+  },
+  "Indexes": {
+   "FirstPlayback": {},
+   "TopMenu": {},
    "Title":[],
-  }),
- }),
-})
+  },
+ },
+}
   bu.skip("> I", index_start)
   bu.skip("B 3s B 1s H 4s"*2) #"FirstPlayback", "TopMenu"
   num_titles=bu.unpack("> H")
@@ -616,7 +614,7 @@ class INDX(BDMV):
    ji=self.json[self.SIG]["Indexes"]
    if i>1:
     ji=self.json[self.SIG]["Indexes"]["Title"]
-    ji+=[od({})]
+    ji+=[{}]
    ji[ti]["object_type"], ji[ti]["access_type"]=StruBi(bu.unpack("> B")).unpack("2 2")
    ji[ti]["reserved01"]=StruBu(b"\0"+bu.unpack(3)).unpack("> I")
    ji[ti]["playback_type"]=StruBi(bu.unpack("> B")).unpack(2)
@@ -636,7 +634,7 @@ class INDX(BDMV):
    ji=self.json[self.SIG]["ExtensionData"]
    length, address, padding, num_entries=bu.unpack("> 2I 3s B", extension_data_start)
    for ex in range(num_entries):
-    ji+=[od({})]
+    ji+=[{}]
     ji[ex]["ID1"], ji[ex]["ID2"], ext_start, ext_len=bu.unpack("> 2H 2I")
     ji[ex]["data_block"]=StruBu(self.bin).unpack(-ext_len, extension_data_start+ext_start)
    for ed in self.json[self.SIG]["ExtensionData"]: hevc(ed["ID1"], ed["ID2"], pack(ed["data_block"]), 0)
@@ -649,7 +647,7 @@ class MOBJ(BDMV):
   BDMV.__init__(self, fe(self.fn, path), json)
 
  def tobin(self, json={}, BDTools=0):
-  if json: self.json=od(json)
+  if json: self.json=json
   if BDTools:
    self.bin=BDMV.tobin(self)
    return self.bin
@@ -720,7 +718,7 @@ class MOBJ(BDMV):
   if BDTools:
    self.json=BDMV.tojson(self)
    return self.json
-  self.json=od({self.SIG: {}})
+  self.json={self.SIG: {}}
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
   version_number, extension_data_start=bu.unpack("> 4s I")
@@ -732,12 +730,12 @@ class MOBJ(BDMV):
   num_objects=bu.unpack("> H")
   self.json[self.SIG]["MovieObjects"]=[]
   for mo in range(num_objects):
-   jm=od({})
+   jm={}
    jm["resume_intention_flag"], jm["menu_call_mask"], jm["title_search_mask"]=StruBi(bu.unpack("> B")).unpack("1 1 1")
    jm["reserved01"], num_cmds=bu.unpack("> B H")
    jm["NavigationCommand"]=[]
    for nc in range(num_cmds):
-    jn=od({})
+    jn={}
     jn["operation_code"]=bu.unpack("> I")&ocm
     op_cnt, grp, sub_grp, imm_op1, imm_op2, pad, branch_opt, pad, cmp_opt, pad, set_opt=StruBi(jn["operation_code"], 32).unpack("3 2 3 1 1 2 4 4 4 3 5")
     jn["operand_1"], jn["operand_2"]=bu.unpack("> 2I")
@@ -787,18 +785,18 @@ class MPLS(BDMV):
   if BDTools:
    self.json=BDMV.tojson(self)
    return self.json
-  self.json=od({self.SIG: {}})
+  self.json={self.SIG: {}}
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
   version_number, list_pos, mark_pos, ext_pos=bu.unpack("> 4s 3I")
   self.ver=int(version_number)/100.0
   if self.ver==3: self.isV3=1 
   self.json[self.SIG]["version_number"]=ascii(version_number)
-  self.json[self.SIG]["PlayList"]=od({})
+  self.json[self.SIG]["PlayList"]={}
   length, padding, list_count, sub_count=bu.unpack("> I 3H", list_pos)
   self.json[self.SIG]["PlayList"]["PlayItem"]=[]
   for p in range(list_count):
-   pi=od({})
+   pi={}
    pil=bu.unpack("> H")
    pi["Clip_Information_file_name"]=ascii(bu.unpack("> 5s"))
    pi["Clip_codec_identifier"]=ascii(bu.unpack("> 4s"))
@@ -817,9 +815,9 @@ class MPLS(BDMV):
    lenSTN, padding, num_video, num_audio, num_pg, num_ig=bu.unpack("> 2H 4B")
    num_secondary_audio, num_secondary_video, num_pip_pg=bu.unpack("> 3B")
    number_of_DolbyVision_video_stream_entries, s4=bu.unpack("> B 4s")
-   pi["STN_table"]=od({"stream": []})
+   pi["STN_table"]={"stream": []}
    for si in range(num_video+num_audio+num_pg+num_ig+num_secondary_audio+num_secondary_video+num_pip_pg+number_of_DolbyVision_video_stream_entries):
-    st=od({})
+    st={}
     next=bu.unpack("> B")+bu.skip(0) #next=StreamAttributes
     st["type"]=bu.unpack("> B")      #StreamEntry 
     if st["type"] in (2, 3, 4): subpath_id=bu.unpack("> B")
@@ -876,7 +874,7 @@ class MPLS(BDMV):
   self.json[self.SIG]["ExtensionData"]=[]
   length, address, padding, num_entries=bu.unpack("> 2I 3s B", ext_pos)
   for ex in range(num_entries):
-   ed=od({})
+   ed={}
    ed["ID1"], ed["ID2"], ext_start, ext_len=bu.unpack("> 2H 2I")
    if (ed["ID1"], ed["ID2"])==(2, 1):
     ps("3D content exists")
