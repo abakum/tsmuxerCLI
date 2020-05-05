@@ -7,9 +7,16 @@ Thanks to https://sites.google.com/site/videofan3d and https://code.videolan.org
 '''
 from __future__ import print_function, division, unicode_literals
 __metaclass__ = type
-import sys, os, locale, struct, fnmatch, inspect
+import sys, os, locale, struct, fnmatch, inspect, json, subprocess
 if sys.version_info<(3, 6): from collections import OrderedDict as od
 else: od = dict
+py3=sys.version_info.major>2
+u8="utf-8"
+acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
+de, en =(lambda s : s,
+         lambda s : s) if py3 else (
+         lambda s : s.decode(acp),
+         lambda s : s.encode(acp))
 
 def ps(*l):
  print(" ".join(map(str, l))+"@"+", ".join(str(x[2]) for x in inspect.stack()[1:]))
@@ -375,7 +382,7 @@ class BD(object):
   else: self.uhd=1  
   return len(all)
  
- def write(self, pattern="*.*", json={}):
+ def write(self, pattern="*.*", json={}, BDTools=0):
   fl=self.select(pattern)
   count=len(fl)
   k=pattern.lower()
@@ -385,16 +392,17 @@ class BD(object):
     obj=bdfe.get(suff(pattern)) or bdfe.get(k)
     if obj:
      self.bd[k]=globals()[obj](self.path) #create obj
-     self.bd[k].write(json)
+     self.bd[k].write(json, BDTools)
    return 1
   if json:
    ps("Not allowed write json to more than one file of BD")
    return 0
-  for k in fl: self.bd[k].write()
+  for k in fl:
+   self.bd[k].write(BDTools=BDTools)
   self.scan()
   return count
  
- def read(self, pattern="*.*"):
+ def read(self, pattern="*.*", BDTools=0):
   count=0
   for p in bdglob(self.path, pattern):
    k=basename(p)
@@ -402,7 +410,7 @@ class BD(object):
    if obj:
     count+=1
     self.bd[k]=globals()[obj](p) #create obj
-    self.bd[k].read()
+    self.bd[k].read(BDTools)
   self.scan()
   return count
   
@@ -411,6 +419,10 @@ class BDMV(object):
   self.SIG=self.__class__.__name__
   self.ver=0
   self.json=od(json)
+  me=sys.modules[self.__module__]
+  mpls2json=os.path.join(os.path.dirname(os.path.abspath(me.__file__ if hasattr(me, "__file__") else sys.argv[0])), "mpls2json.exe")
+  self.mpls2json=mpls2json if os.path.isfile(mpls2json) else ""
+  self.infile=self.outfile=""
   self.file=[]
   for p in self.pn:
    pp=os.path.join(path, *p)
@@ -420,37 +432,68 @@ class BDMV(object):
  def __str__(self):
   return " %s: %s"%(self.__class__.__name__, self.__dict__)
   
- def write(self, json={}):
+ def write(self, json={}, BDTools=0):
   "Pack self.bin from json or self.json  then write to files of BD"
   if json: self.json=od(json)
-  self.tobin(self.json)
+  self.tobin(self.json, BDTools=BDTools)
   if self.bin:
    for f in self.file:
+    if f==self.outfile:
+     self.outfile=""
+     continue
     ps("Write '%s'"%f)
     try:
      with open(f, 'wb') as wb: wb.write(self.bin)
     except: ps("Error writing '%s' from %s.bin"%f)
   else: ps("Empty %s.bin packed from '%s'"%(self.SIG, json if json else self.json))
   
- def read(self):
+ def read(self, BDTools=0):
   "Read files of BD to bin then unpack to json"
+  self.infile=""
   for i, f in enumerate(self.file):
    ps("Read '%s'"%f)
    try:
     with open(f, 'rb') as rb: self.bin=rb.read()
+    self.infile=f
    except:
     ps("Error reading '%s'"%f)
     if i: self.bin=b""
    else: break
   if not self.bin: ps("Empty %s.bin"%self.SIG)
-  self.tojson()
+  self.tojson(BDTools)
   return self.json
  
- def tojson(self):
-  pass
+ def tojson(self, BDTools=1):
+  self.json={self.SIG: {}}
+  if self.mpls2json and self.bin and self.infile:
+   cmd=[self.mpls2json, self.infile]
+   self.infile=""
+   ps(cmd)
+   bu=b""
+   try: bu=subprocess.Popen(map(en, cmd), stdout=subprocess.PIPE).communicate()[0]
+   except subprocess.CalledProcessError as e: ps("return code:", e.returncode, "\nreturn text:", e.output)
+   except OSError as e: ps(str(e))
+   if bu.startswith(b"{"): self.json=json.loads(bu.decode()) 
+  return self.json
 
- def tobin(self, json={}):
-  pass
+ def tobin(self, js={}, BDTools=1):
+  if js: self.json=js
+  self.bin=b""
+  self.outfile=""
+  if self.mpls2json and self.json:
+   cmd=[self.mpls2json, "-reverse", "-", self.file[0]]
+   ps(cmd)
+   try:
+    p=subprocess.Popen(map(en, cmd), stdin=subprocess.PIPE)
+    p.communicate(json.dumps(self.json).encode("ascii"))
+   except subprocess.CalledProcessError as e: ps("return code:", e.returncode, "\nreturn text:", e.output)
+   except OSError as e: ps(str(e))
+   if not p.returncode:
+    try:
+     with open(self.file[0], 'rb') as rb: self.bin=rb.read()
+     self.outfile=self.file[0]
+    except IOError as e: ps(str(e))
+  return self.bin
 
 def fe(fn, path):
  return  dn(path, 2) if basename(path)==fn.lower() else path
@@ -471,8 +514,11 @@ class INDX(BDMV):
   #super().__init__(fe(self.fn, path), json)
   BDMV.__init__(self, fe(self.fn, path), json)
   
- def tobin(self, json={}):
+ def tobin(self, json={}, BDTools=0):
   if json: self.json=od(json)
+  if BDTools:
+   self.bin=BDMV.tobin(self)
+   return self.bin
   b=b""
   if not self.SIG in self.json: return b
   ji=self.json[self.SIG]["AppInfoBDMV"]
@@ -526,7 +572,10 @@ class INDX(BDMV):
   self.bin+=ExtensionData
   return self.bin
   
- def tojson(self):
+ def tojson(self, BDTools=0):
+  if BDTools:
+   self.json=BDMV.tojson(self)
+   return self.json
   self.json=od({self.SIG: {}})
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
@@ -597,8 +646,11 @@ class MOBJ(BDMV):
   self.pn=("BDMV", ), ("BDMV", "BACKUP")
   BDMV.__init__(self, fe(self.fn, path), json)
 
- def tobin(self, json={}):
+ def tobin(self, json={}, BDTools=0):
   if json: self.json=od(json)
+  if BDTools:
+   self.bin=BDMV.tobin(self)
+   return self.bin
   b=b""
   if not self.SIG in self.json: return b
   insnL={insn[k].lower():k for k in insn}
@@ -662,7 +714,10 @@ class MOBJ(BDMV):
   self.bin+=ExtensionData
   return self.bin
   
- def tojson(self):
+ def tojson(self, BDTools=0):
+  if BDTools:
+   self.json=BDMV.tojson(self)
+   return self.json
   self.json=od({self.SIG: {}})
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
@@ -725,8 +780,11 @@ class MPLS(BDMV):
   self.uhd=0
   self.is4K=0
   self.isV3=0
-
- def tojson(self):
+  
+ def tojson(self, BDTools=0):
+  if BDTools:
+   self.json=BDMV.tojson(self)
+   return self.json
   self.json=od({self.SIG: {}})
   bu=StruBu(self.bin)
   if self.SIG!=ascii(bu.unpack("> 4s")): return self.json
@@ -826,7 +884,6 @@ class MPLS(BDMV):
   return self.json
 
 if __name__=="__main__":
- import json
  def ac(eio):
   import sys, locale, os, codecs
   global py3, u8, acp, de, en
@@ -851,6 +908,8 @@ if __name__=="__main__":
  
  bd=BD(argv[1])
  bd.read("*.bdm*")
+ bd.write("index.bdmv", BDTools=1)
  ps(json.dumps(bd.ind.json, indent=4))
  bd.read("*.mpl*")
+ bd.read("00010.cl*")
  ps(bd)
