@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # coding=utf8
 #
-'''Read Blu-ray Disk's index.bdmv, MovieObject.bdmv and part of *.mpls to json
-Write from json to index.bdmv, MovieObject.bdmv
+'''
+Reads through py2 or py3 index.bdmv, MovieObject.bdmv and part * .mpls of Blu-ray Disk into objects
+Writes from objects to index.bdmv, MovieObject.bdmv
+Reads and writes everything else through mpls2json.exe
 Thanks to https://sites.google.com/site/videofan3d and https://code.videolan.org/videolan/libbluray.git
 '''
 from __future__ import print_function, division, unicode_literals
