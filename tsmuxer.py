@@ -26,273 +26,12 @@ def ac(eio):
                                                           eio))
  ps(eio, "encoding='%s'"%eio.encoding, acp)
 
-import sys, os, locale, subprocess, inspect, json, bdon
+import sys, locale, os, codecs, subprocess, inspect, json, bdon
 from glob import glob
 from tempfile import NamedTemporaryFile
 from datetime import datetime, timedelta
 
 shell="SHELL" in os.environ
-
-def bdmv_(s='''{
- "MOBJ": {
-  "version_number": "0200",
-  "reserved_header": [
-   0
-  ],
- "MovieObjects": [
-   {
-    "resume_intention_flag": 0,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 1346371585,
-      "operand_1": 4,
-      "operand_2": 2,
-      "command": "Move reg_4 2"
-     },
-     {
-      "operation_code": 562102272,
-      "operand_1": 1,
-      "operand_2": 0,
-      "command": "Jump_Title 1"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 0,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 0,
-      "operand_1": 0,
-      "operand_2": 0,
-      "command": "Nop"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 1,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 830472202,
-      "operand_1": 0,
-      "operand_2": 0,
-      "command": "SetOutputMode 0"
-     },
-     {
-      "operation_code": 1342177281,
-      "operand_1": 4,
-      "operand_2": 2147483652,
-      "command": "Move reg_4 reg_2147483652"
-     },
-     {
-      "operation_code": 1346371587,
-      "operand_1": 4,
-      "operand_2": 1,
-      "command": "Add reg_4 1"
-     },
-     {
-      "operation_code": 570425344,
-      "operand_1": 2147483652,
-      "operand_2": 0,
-      "command": "Play_PL reg_2147483652"
-     },
-     {
-      "operation_code": 553713664,
-      "operand_1": 4,
-      "operand_2": 0,
-      "command": "Jump_Title reg_4"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 1,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 830472202,
-      "operand_1": 0,
-      "operand_2": 0,
-      "command": "SetOutputMode 0"
-     },
-     {
-      "operation_code": 1346371585,
-      "operand_1": 4,
-      "operand_2": 1,
-      "command": "Move reg_4 1"
-     },
-     {
-      "operation_code": 570425344,
-      "operand_1": 2147483652,
-      "operand_2": 0,
-      "command": "Play_PL reg_2147483652"
-     },
-     {
-      "operation_code": 553713664,
-      "operand_1": 4,
-      "operand_2": 0,
-      "command": "Jump_Title reg_4"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 1,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 553713664,
-      "operand_1": 4,
-      "operand_2": 0,
-      "command": "Jump_Title reg_4"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 1,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 830472202,
-      "operand_1": 1,
-      "operand_2": 0,
-      "command": "SetOutputMode 1"
-     },
-     {
-      "operation_code": 1342177281,
-      "operand_1": 4,
-      "operand_2": 2147483652,
-      "command": "Move reg_4 reg_2147483652"
-     },
-     {
-      "operation_code": 1346371587,
-      "operand_1": 4,
-      "operand_2": 1,
-      "command": "Add reg_4 1"
-     },
-     {
-      "operation_code": 570425344,
-      "operand_1": 2147483652,
-      "operand_2": 0,
-      "command": "Play_PL reg_2147483652"
-     },
-     {
-      "operation_code": 553713664,
-      "operand_1": 4,
-      "operand_2": 0,
-      "command": "Jump_Title reg_4"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 1,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 830472202,
-      "operand_1": 1,
-      "operand_2": 0,
-      "command": "SetOutputMode 1"
-     },
-     {
-      "operation_code": 1346371585,
-      "operand_1": 4,
-      "operand_2": 1,
-      "command": "Move reg_4 1"
-     },
-     {
-      "operation_code": 570425344,
-      "operand_1": 2147483652,
-      "operand_2": 0,
-      "command": "Play_PL reg_2147483652"
-     },
-     {
-      "operation_code": 553713664,
-      "operand_1": 4,
-      "operand_2": 0,
-      "command": "Jump_Title reg_4"
-     }
-    ]
-   },
-   {
-    "resume_intention_flag": 0,
-    "menu_call_mask": 0,
-    "title_search_mask": 0,
-    "reserved01": 0,
-    "NavigationCommand": [
-     {
-      "operation_code": 830472202,
-      "operand_1": 1,
-      "operand_2": 0,
-      "command": "SetOutputMode 1"
-     },
-     {
-      "operation_code": 1346371585,
-      "operand_1": 4,
-      "operand_2": 2,
-      "command": "Move reg_4 2"
-     },
-     {
-      "operation_code": 562102272,
-      "operand_1": 1,
-      "operand_2": 0,
-      "command": "Jump_Title 1"
-     }
-    ]
-   }
-  ]
- }
-}''', mo=1):
- fb="index"
- if mo:
-  fb="MovieObject"
-  s=json.dumps(makeMO())
- fb+=".bdmv"
- sour=os.path.join(fo, "BDMV", fb)
- cmd=[f2, "-reverse", "-", sour]
- ps(cmd)
- if d: ps(s)
- try:
-  p=subprocess.Popen(map(en, cmd), stdin=subprocess.PIPE)
-  p.communicate(s.encode("ascii"))
- except subprocess.CalledProcessError as e:
-  ps("return code:", e.returncode)
-  ps("return text:", e.output)
-  exit(1)
- except OSError as e:
-  ps(str(e))
-  exit(1)
- if not p.returncode:
-  dest=os.path.join(fo, "BDMV", "BACKUP", fb)
-  try:
-   with open(sour, 'rb') as src, open(dest, 'wb') as dst: dst.write(src.read())
-  except IOError as e: ps(str(e))
- return p.returncode
- 
-def mplsBDT(s):
- cmd=[f2, s]
- ps(cmd)
- bu=b""
- try: bu=subprocess.Popen(map(en, cmd), stdout=subprocess.PIPE).communicate()[0]
- except subprocess.CalledProcessError as e: ps("return code:", e.returncode, "\nreturn text:", e.output)
- except OSError as e: ps(str(e))
- r=bu.decode() if bu.startswith(b"{") else '{"MPLS": {}}'
- if d: ps(r)
- return r
 
 def makeMO():
  jmo={"MOBJ": {
@@ -412,7 +151,7 @@ def do():
   bd.read("*.bdm*")
   #ps(json.dumps(bd.mov.json, indent=4))
   bd.mov.write(makeMO())
-  ps(json.dumps(bd.mov.read(), indent=4))
+  #ps(json.dumps(bd.mov.read(), indent=4))
  else:
   mo=bdon.MOBJ(fo)
   #ps(json.dumps(mo.read(), indent=4))
@@ -1039,6 +778,9 @@ if ext(fo) in extl:
  if ext(fo)==extl[0]:
   rep("blu-ray")
   if "label" not in ms[0]: rep('label="%s"'%os.path.splitext(os.path.split(fo)[1])[0])
+if {"blu-ray", "avchd"}&ms[0]:
+ rep("new-audio-pes")
+ rep("hdmv-descriptors")
 load={}
 if os.path.isfile(fj):
  try: load=json.load(open(fj))
