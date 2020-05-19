@@ -4,8 +4,9 @@
 '''
 Reads through py2 or py3 index.bdmv, MovieObject.bdmv and part *.mpls of Blu-ray Disk into objects
 Writes from objects to index.bdmv, MovieObject.bdmv
+Thanks to https://code.videolan.org/videolan/libbluray.git
 Reads and writes everything else through mpls2json.exe
-Thanks to https://sites.google.com/site/videofan3d and https://code.videolan.org/videolan/libbluray.git
+Thanks to https://sites.google.com/site/videofan3d
 '''
 from __future__ import print_function, division, unicode_literals
 __metaclass__ = type
@@ -86,14 +87,15 @@ other_stream={
  0x91: "IGS",
  0x92: "Text Subtitle",
 }
-audio_resentation={
+audio_presentation={
  0: "0",
  1: "Mono",
  2: "Reserved-2",
  3: "Stereo",
  4: "Reserved-4",
  5: "Reserved-5",
- 6: "Multi Channel"
+ 6: "Multi Channel",
+ 0xC: "Combo",
 }
 sampling_frequency={
  0: "0",
@@ -839,18 +841,26 @@ class MPLS(BDMV):
      st["frame_rate"]=frame_rate.get(VF.unpack(4), "0")
      if coding_type==0x24: 
       st["reserved_uhd"], st["reserved01"]=bu.unpack("> B H")
-      if   st["reserved_uhd"]==0x12: self.uhd|=0b10010 #HDR10plus and HDR10
-      elif st["reserved_uhd"]==0x80: self.uhd|=0b10000 #HDR10plus
-      elif st["reserved_uhd"]==0x22: self.uhd|=0b00100 #DV
+      if   st["reserved_uhd"]==0x12:
+       ps("Stream #%s is HDR10plus and HDR10"%(si+1))
+       self.uhd|=0b10010
+      elif st["reserved_uhd"]==0x80:
+       ps("Stream #%s is HDR10plus"%(si+1))
+       self.uhd|=0b10000
+      elif st["reserved_uhd"]==0x22:
+       ps("Stream #%s is Dolby Video"%(si+1))
+       self.uhd|=0b00100
      else:  st["reserved01"]=StruBu(b"\0"+bu.unpack(3)).unpack("> I")
     if coding_type in audio_stream:
      st["stream_coding_type"]=audio_stream[coding_type]
      ap, sf=StruBi(bu.unpack("> B")).unpack("4 4")
-     st["audio_presentation_type"]=audio_resentation.get(ap, "?")
+     st["audio_presentation_type"]=audio_presentation.get(ap, "?")
      st["sampling_frequency"]=sampling_frequency.get(sf, "?")
     if coding_type in other_stream:
      st["stream_coding_type"]=other_stream[coding_type]
-     if coding_type==0x92: char_code=bu.unpack("> B")
+     if coding_type==0x92:
+      ps("Stream #%s is Text Subtitle"%(si+1))
+      char_code=bu.unpack("> B")
     if coding_type not in video_stream: st["language_code"]=ascii(bu.unpack("> 3s"))
     if "stream_coding_type" not in st:
      ps("unrecognized coding type %02x"%coding_type)
@@ -866,7 +876,7 @@ class MPLS(BDMV):
      num, B=bu.unpack("> 2B")
      bu.skip(num+num%2) #word align
     if num_video+num_audio+num_pg+num_ig+num_secondary_audio+num_secondary_video+num_pip_pg<=si<num_video+num_audio+num_pg+num_ig+num_secondary_audio+num_secondary_video+num_pip_pg+number_of_DolbyVision_video_stream_entries:
-     ps("Stream #%s is Dolby Video"%(si+1))
+     pass #ps("Stream #%s is Dolby Video"%(si+1))
     bu.ob=next
     pi["STN_table"]["stream"]+=[st]
    self.json[self.SIG]["PlayList"]["PlayItem"]+=[pi]
@@ -885,15 +895,7 @@ class MPLS(BDMV):
 
 if __name__=="__main__":
  def ac(eio):
-  import sys, locale, os, codecs
-  global py3, u8, acp, de, en
-  py3=sys.version_info.major>2
-  u8="utf-8"
-  acp=locale.setlocale(locale.LC_ALL, "").partition(".")[2] or u8
-  de, en =(lambda s : s,
-           lambda s : s) if py3 else (
-           lambda s : s.decode(acp),
-           lambda s : s.encode(acp))
+  import codecs
   mingw="MINGW_PREFIX" in os.environ
   if mingw: pass #dirty fix misdetection of sys.stdout.encoding as cpXXXX in mingw@Mintty
   elif py3 or not eio.isatty() or eio.encoding.lstrip("cp")==acp: return
